@@ -1,12 +1,12 @@
 from pydantic import BaseModel, Field
-from typing import Optional, Dict, Any
+from typing import Optional, List, Dict, Any
 
 
 class WatermarkRequest(BaseModel):
     text: str = Field(..., min_length=1, description="The watermarked input text")
     attack_mode: Optional[str] = Field(
         default="combined",
-        description="Attack strategy: 'combined', 'paraphrase', 'perturb', or 'sanitize'"
+        description="Attack strategy: 'combined', 'paraphrase', 'perturb', 'homoglyph', 'shuffle', or 'sanitize'"
     )
     enable_thinking: Optional[bool] = Field(
         default=True,
@@ -33,6 +33,9 @@ class WatermarkResponse(BaseModel):
     pre_attack: DetectionScore
     post_attack: DetectionScore
     watermark_reduction_pct: float
+    is_clean: bool
+    verdict_title: str
+    step_logs: List[str]
     attack_used: str
     processing_time_ms: int
 

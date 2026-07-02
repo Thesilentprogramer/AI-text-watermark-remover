@@ -20,7 +20,7 @@
                 <span>Gemma 4 E2B Engine</span>
             </div>
             <h1>SynthID Watermark Remover</h1>
-            <p class="subtitle">Adversarial LLM Paraphrasing & Token Perturbation Pipeline</p>
+            <p class="subtitle">Adversarial LLM Paraphrasing, Homoglyph & Token Perturbation Pipeline</p>
         </header>
 
         <!-- Pipeline Workflow Diagram -->
@@ -38,7 +38,7 @@
                 <div class="step-arrow">→</div>
                 <div class="step-chip highlight">
                     <span class="step-num">3</span>
-                    <span class="step-name">Paraphrase</span>
+                    <span class="step-name">Attack</span>
                 </div>
                 <div class="step-arrow">→</div>
                 <div class="step-chip">
@@ -59,18 +59,23 @@
             <div class="clay-card workspace-card">
                 <div class="card-header">
                     <h2>Input Watermarked Text</h2>
-                    <button id="sampleBtn" class="clay-btn small-btn">Load Sample</button>
+                    <div class="sample-btn-group">
+                        <button id="sampleWmBtn" class="clay-btn small-btn">Sample: Watermarked</button>
+                        <button id="sampleCleanBtn" class="clay-btn small-btn">Sample: Clean</button>
+                    </div>
                 </div>
-                <textarea id="inputText" placeholder="Paste your AI-generated or watermarked text here..." rows="8"></textarea>
+                <textarea id="inputText" placeholder="Paste your AI-generated or watermarked text here..." rows="9"></textarea>
                 
                 <div class="control-row">
                     <div class="control-group">
-                        <label for="attackMode">Attack Mode</label>
+                        <label for="attackMode">Attack Strategy</label>
                         <select id="attackMode" class="clay-select">
                             <option value="combined" selected>Combined (Paraphrase + Perturb)</option>
-                            <option value="paraphrase">Paraphrase Only (Gemma 4)</option>
-                            <option value="perturb">Perturb Only (Synonym Swap)</option>
-                            <option value="sanitize">Sanitize Only (Unicode Strip)</option>
+                            <option value="paraphrase">Paraphrase Only (Gemma 4 E2B)</option>
+                            <option value="homoglyph">Homoglyph Attack (Unicode Lookalikes)</option>
+                            <option value="shuffle">Sentence Shuffling Attack</option>
+                            <option value="perturb">Token Perturbation Only</option>
+                            <option value="sanitize">Sanitize Only (Zero-Width Strip)</option>
                         </select>
                     </div>
 
@@ -96,6 +101,11 @@
                     <button id="copyBtn" class="clay-btn small-btn" disabled>Copy Clean Text</button>
                 </div>
 
+                <!-- Prominent Verdict Banner -->
+                <div id="verdictBanner" class="verdict-banner gray-banner">
+                    <span id="verdictText">Submit text to analyze and remove SynthID watermark</span>
+                </div>
+
                 <!-- Score Gauges -->
                 <div id="scoreSection" class="score-container">
                     <div class="score-box pre-box">
@@ -104,7 +114,7 @@
                             <span id="preGVal" class="score-val">0.00</span>
                             <span id="preBadge" class="status-badge gray">Waiting</span>
                         </div>
-                        <span class="score-sub">Threshold: ≥ 0.55</span>
+                        <span class="score-sub">Watermark Signal ≥ 0.55</span>
                     </div>
 
                     <div class="score-divider">➔</div>
@@ -115,7 +125,7 @@
                             <span id="postGVal" class="score-val">0.00</span>
                             <span id="postBadge" class="status-badge gray">Waiting</span>
                         </div>
-                        <span class="score-sub">Target: ~0.49 - 0.51</span>
+                        <span class="score-sub">Clean Target ~0.49–0.51</span>
                     </div>
                 </div>
 
@@ -131,12 +141,20 @@
                 </div>
 
                 <!-- Cleaned Output Text -->
-                <textarea id="outputText" placeholder="Clean, un-watermarked output text will appear here..." readonly rows="8"></textarea>
+                <textarea id="outputText" placeholder="Clean, un-watermarked output text will appear here..." readonly rows="6"></textarea>
+
+                <!-- Detailed Execution Step Logs -->
+                <div class="logs-card">
+                    <div class="logs-header">Execution Logs & Pipeline Diagnostics</div>
+                    <ul id="stepLogsList" class="logs-list">
+                        <li>System ready. Select an attack mode and click "Remove Watermark".</li>
+                    </ul>
+                </div>
 
                 <!-- Status Footer -->
                 <div class="status-footer">
-                    <span id="timingBadge">Processing Time: 0 ms</span>
-                    <span id="sanitizedBadge">Unicode Removed: 0 chars</span>
+                    <span id="timingBadge">Runtime: 0 ms</span>
+                    <span id="sanitizedBadge">Unicode Stripped: 0 chars</span>
                 </div>
             </div>
         </main>

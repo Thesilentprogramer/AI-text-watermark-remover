@@ -6,22 +6,34 @@ document.addEventListener("DOMContentLoaded", () => {
     const runBtn = document.getElementById("runBtn");
     const btnText = document.getElementById("btnText");
     const btnSpinner = document.getElementById("btnSpinner");
-    const sampleBtn = document.getElementById("sampleBtn");
+    const sampleWmBtn = document.getElementById("sampleWmBtn");
+    const sampleCleanBtn = document.getElementById("sampleCleanBtn");
     const copyBtn = document.getElementById("copyBtn");
 
+    const verdictBanner = document.getElementById("verdictBanner");
+    const verdictText = document.getElementById("verdictText");
     const preGVal = document.getElementById("preGVal");
     const preBadge = document.getElementById("preBadge");
     const postGVal = document.getElementById("postGVal");
     const postBadge = document.getElementById("postBadge");
     const progressBar = document.getElementById("progressBar");
     const reductionPct = document.getElementById("reductionPct");
+    const stepLogsList = document.getElementById("stepLogsList");
     const timingBadge = document.getElementById("timingBadge");
     const sanitizedBadge = document.getElementById("sanitizedBadge");
 
-    const SAMPLE_TEXT = `Google DeepMind's SynthID technology embeds an imperceptible statistical watermark into AI-generated text by biasing token selection probabilities during logit processing. The signal resides within n-gram hash patterns across token sequences and survives simple editing techniques. This sample text illustrates how the statistical excess of green-list tokens enables watermark detectors to identify synthetic text with high confidence.`;
+    // Sample 1: Synthetic Watermarked Text
+    const WATERMARKED_SAMPLE = `Google DeepMind's SynthID technology embeds an imperceptible statistical watermark into AI-generated text by biasing token selection probabilities during logit processing. The signal resides within n-gram hash patterns across token sequences and survives simple editing techniques. This sample text illustrates how the statistical excess of green-list tokens enables watermark detectors to identify synthetic text with high confidence.`;
 
-    sampleBtn.addEventListener("click", () => {
-        inputText.value = SAMPLE_TEXT;
+    // Sample 2: Human Unwatermarked Text
+    const CLEAN_SAMPLE = `Natural human writing features highly variable sentence lengths, creative metaphors, and unconstrained vocabulary distributions. Because no algorithmic logit biasing or n-gram hashing was applied during its creation, standard statistical watermark detectors will register baseline noise levels.`;
+
+    sampleWmBtn.addEventListener("click", () => {
+        inputText.value = WATERMARKED_SAMPLE;
+    });
+
+    sampleCleanBtn.addEventListener("click", () => {
+        inputText.value = CLEAN_SAMPLE;
     });
 
     copyBtn.addEventListener("click", () => {
@@ -42,8 +54,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Loading UI state
         runBtn.disabled = true;
-        btnText.innerText = "Processing Pipeline...";
+        btnText.innerText = "Executing Attack Pipeline...";
         btnSpinner.classList.remove("hidden");
+
+        verdictBanner.className = "verdict-banner gray-banner";
+        verdictText.innerText = "Running 5-step adversarial attack pipeline...";
 
         try {
             const response = await fetch("/remove-watermark", {
@@ -68,6 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
             renderResults(data);
         } catch (err) {
             alert(`Error: ${err.message}`);
+            verdictBanner.className = "verdict-banner red-banner";
+            verdictText.innerText = `Error executing attack: ${err.message}`;
         } finally {
             runBtn.disabled = false;
             btnText.innerText = "Remove Watermark";
@@ -80,6 +97,16 @@ document.addEventListener("DOMContentLoaded", () => {
         outputText.value = data.clean_text;
         copyBtn.disabled = !data.clean_text;
 
+        // Render Prominent Verdict Banner
+        verdictText.innerText = data.verdict_title;
+        if (data.is_clean) {
+            verdictBanner.className = "verdict-banner green-banner";
+        } else if (data.watermark_reduction_pct > 15.0) {
+            verdictBanner.className = "verdict-banner amber-banner";
+        } else {
+            verdictBanner.className = "verdict-banner red-banner";
+        }
+
         // Pre-Attack Score
         const preG = data.pre_attack.g_value;
         preGVal.innerText = preG.toFixed(2);
@@ -88,7 +115,7 @@ document.addEventListener("DOMContentLoaded", () => {
             preBadge.innerText = "Watermarked";
         } else {
             preBadge.className = "status-badge green";
-            preBadge.innerText = "Unwatermarked";
+            preBadge.innerText = "Clean";
         }
 
         // Post-Attack Score
@@ -102,12 +129,22 @@ document.addEventListener("DOMContentLoaded", () => {
             postBadge.innerText = "Clean";
         }
 
-        // Reduction & Badges
+        // Reduction Progress Bar
         const redPct = data.watermark_reduction_pct;
         reductionPct.innerText = `${redPct.toFixed(1)}%`;
         progressBar.style.width = `${Math.min(Math.max(redPct, 5), 100)}%`;
 
-        timingBadge.innerText = `Processing Time: ${data.processing_time_ms} ms`;
-        sanitizedBadge.innerText = `Unicode Removed: ${data.sanitized_char_count} chars`;
+        // Render Step Logs
+        stepLogsList.innerHTML = "";
+        if (data.step_logs && data.step_logs.length > 0) {
+            data.step_logs.forEach(log => {
+                const li = document.createElement("li");
+                li.innerText = `▸ ${log}`;
+                stepLogsList.appendChild(li);
+            });
+        }
+
+        timingBadge.innerText = `Runtime: ${data.processing_time_ms} ms`;
+        sanitizedBadge.innerText = `Unicode Stripped: ${data.sanitized_char_count} chars`;
     }
 });
