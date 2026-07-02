@@ -22,10 +22,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const timingBadge = document.getElementById("timingBadge");
     const sanitizedBadge = document.getElementById("sanitizedBadge");
 
-    // Sample 1: Synthetic Watermarked Text
+    const transformationSection = document.getElementById("transformationSection");
+    const timelineTabs = document.getElementById("timelineTabs");
+    const stepTitle = document.getElementById("stepTitle");
+    const stepDesc = document.getElementById("stepDesc");
+    const stepTextOutput = document.getElementById("stepTextOutput");
+
+    let currentIntermediateSteps = [];
+
+    // Step Chips Element References
+    const stepChips = [
+        document.getElementById("stepChip1"),
+        document.getElementById("stepChip2"),
+        document.getElementById("stepChip3"),
+        document.getElementById("stepChip4"),
+        document.getElementById("stepChip5")
+    ];
+
+    // Sample Texts
     const WATERMARKED_SAMPLE = `Google DeepMind's SynthID technology embeds an imperceptible statistical watermark into AI-generated text by biasing token selection probabilities during logit processing. The signal resides within n-gram hash patterns across token sequences and survives simple editing techniques. This sample text illustrates how the statistical excess of green-list tokens enables watermark detectors to identify synthetic text with high confidence.`;
 
-    // Sample 2: Human Unwatermarked Text
     const CLEAN_SAMPLE = `Natural human writing features highly variable sentence lengths, creative metaphors, and unconstrained vocabulary distributions. Because no algorithmic logit biasing or n-gram hashing was applied during its creation, standard statistical watermark detectors will register baseline noise levels.`;
 
     sampleWmBtn.addEventListener("click", () => {
@@ -52,13 +68,16 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        // Loading UI state
+        // Loading UI state & animate step chips 1 -> 5
         runBtn.disabled = true;
         btnText.innerText = "Executing Attack Pipeline...";
         btnSpinner.classList.remove("hidden");
 
         verdictBanner.className = "verdict-banner gray-banner";
-        verdictText.innerText = "Running 5-step adversarial attack pipeline...";
+        verdictText.innerText = "Executing 5-step adversarial attack pipeline...";
+
+        resetStepChips();
+        animateStepChipsProgress();
 
         try {
             const response = await fetch("/remove-watermark", {
@@ -80,11 +99,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             const data = await response.json();
+            markAllStepsCompleted();
             renderResults(data);
         } catch (err) {
             alert(`Error: ${err.message}`);
             verdictBanner.className = "verdict-banner red-banner";
             verdictText.innerText = `Error executing attack: ${err.message}`;
+            resetStepChips();
         } finally {
             runBtn.disabled = false;
             btnText.innerText = "Remove Watermark";
@@ -92,12 +113,38 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
+    function resetStepChips() {
+        stepChips.forEach(chip => {
+            if (chip) chip.className = "step-chip";
+        });
+    }
+
+    function animateStepChipsProgress() {
+        let current = 0;
+        const interval = setInterval(() => {
+            if (current < stepChips.length) {
+                if (stepChips[current]) {
+                    stepChips[current].className = "step-chip active";
+                }
+                current++;
+            } else {
+                clearInterval(interval);
+            }
+        }, 300);
+    }
+
+    function markAllStepsCompleted() {
+        stepChips.forEach(chip => {
+            if (chip) chip.className = "step-chip completed";
+        });
+    }
+
     function renderResults(data) {
         // Output clean text
         outputText.value = data.clean_text;
         copyBtn.disabled = !data.clean_text;
 
-        // Render Prominent Verdict Banner
+        // Render Verdict Banner
         verdictText.innerText = data.verdict_title;
         if (data.is_clean) {
             verdictBanner.className = "verdict-banner green-banner";
@@ -107,34 +154,21 @@ document.addEventListener("DOMContentLoaded", () => {
             verdictBanner.className = "verdict-banner red-banner";
         }
 
-        // Pre-Attack Score
-        const preG = data.pre_attack.g_value;
-        preGVal.innerText = preG.toFixed(2);
-        if (data.pre_attack.is_watermarked) {
-            preBadge.className = "status-badge red";
-            preBadge.innerText = "Watermarked";
-        } else {
-            preBadge.className = "status-badge green";
-            preBadge.innerText = "Clean";
-        }
+        // Pre & Post Scores
+        preGVal.innerText = data.pre_attack.g_value.toFixed(2);
+        preBadge.className = data.pre_attack.is_watermarked ? "status-badge red" : "status-badge green";
+        preBadge.innerText = data.pre_attack.is_watermarked ? "Watermarked" : "Clean";
 
-        // Post-Attack Score
-        const postG = data.post_attack.g_value;
-        postGVal.innerText = postG.toFixed(2);
-        if (data.post_attack.is_watermarked) {
-            postBadge.className = "status-badge red";
-            postBadge.innerText = "Watermarked";
-        } else {
-            postBadge.className = "status-badge green";
-            postBadge.innerText = "Clean";
-        }
+        postGVal.innerText = data.post_attack.g_value.toFixed(2);
+        postBadge.className = data.post_attack.is_watermarked ? "status-badge red" : "status-badge green";
+        postBadge.innerText = data.post_attack.is_watermarked ? "Watermarked" : "Clean";
 
-        // Reduction Progress Bar
+        // Progress Bar
         const redPct = data.watermark_reduction_pct;
         reductionPct.innerText = `${redPct.toFixed(1)}%`;
         progressBar.style.width = `${Math.min(Math.max(redPct, 5), 100)}%`;
 
-        // Render Step Logs
+        // Step Logs
         stepLogsList.innerHTML = "";
         if (data.step_logs && data.step_logs.length > 0) {
             data.step_logs.forEach(log => {
@@ -146,5 +180,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
         timingBadge.innerText = `Runtime: ${data.processing_time_ms} ms`;
         sanitizedBadge.innerText = `Unicode Stripped: ${data.sanitized_char_count} chars`;
+
+        // Render Paragraph Transformation Timeline
+        currentIntermediateSteps = data.intermediate_steps || [];
+        if (currentIntermediateSteps.length > 0) {
+            transformationSection.classList.remove("hidden");
+            selectTimelineStep(1);
+        }
+    }
+
+    // Timeline Tab Click Listener
+    timelineTabs.addEventListener("click", (e) => {
+        const btn = e.target.closest(".tab-btn");
+        if (!btn) return;
+        const stepNum = parseInt(btn.dataset.step, 10);
+        selectTimelineStep(stepNum);
+    });
+
+    function selectTimelineStep(stepNum) {
+        // Highlight active tab
+        const buttons = timelineTabs.querySelectorAll(".tab-btn");
+        buttons.forEach(b => {
+            if (parseInt(b.dataset.step, 10) === stepNum) {
+                b.classList.add("active");
+            } else {
+                b.classList.remove("active");
+            }
+        });
+
+        // Find step payload
+        const stepData = currentIntermediateSteps.find(s => s.step_number === stepNum);
+        if (stepData) {
+            stepTitle.innerText = `Step ${stepData.step_number}: ${stepData.step_name}`;
+            stepDesc.innerText = stepData.description;
+            stepTextOutput.value = stepData.text_after_step;
+        }
     }
 });

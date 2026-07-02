@@ -146,12 +146,20 @@ body {
     font-size: 0.85rem;
     font-weight: 600;
     color: var(--text-secondary);
+    transition: all 0.3s ease;
 }
 
-.step-chip.highlight {
-    background: linear-gradient(135deg, rgba(0, 242, 254, 0.15) 0%, rgba(79, 172, 254, 0.15) 100%);
+.step-chip.active {
+    background: linear-gradient(135deg, rgba(0, 242, 254, 0.2) 0%, rgba(79, 172, 254, 0.2) 100%);
     color: var(--accent-cyan);
-    border: 1px solid rgba(0, 242, 254, 0.3);
+    border: 1px solid rgba(0, 242, 254, 0.4);
+    box-shadow: 0 0 15px rgba(0, 242, 254, 0.2);
+}
+
+.step-chip.completed {
+    background: rgba(0, 230, 118, 0.1);
+    color: var(--success-green);
+    border: 1px solid rgba(0, 230, 118, 0.25);
 }
 
 .step-num {
@@ -163,6 +171,12 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 0.75rem;
+}
+
+.step-chip.completed .step-num {
+    background: var(--success-green);
+    color: #000;
+    font-weight: 800;
 }
 
 .step-arrow {
@@ -495,6 +509,77 @@ textarea:focus {
     background: linear-gradient(90deg, var(--accent-cyan) 0%, var(--success-green) 100%);
     border-radius: 999px;
     transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Paragraph Transformation Timeline */
+.timeline-card {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.timeline-tabs {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+}
+
+.tab-btn {
+    background: var(--clay-surface-light);
+    color: var(--text-secondary);
+    border: 1px solid var(--clay-border);
+    padding: 0.5rem 1.2rem;
+    border-radius: 999px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: var(--clay-btn-shadow);
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
+    color: #000;
+    border: none;
+    font-weight: 800;
+    box-shadow: 0 4px 12px rgba(0, 242, 254, 0.3);
+}
+
+.step-inspector-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.step-info-row {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.step-title-badge {
+    background: rgba(0, 242, 254, 0.15);
+    color: var(--accent-cyan);
+    padding: 0.3rem 0.8rem;
+    border-radius: 8px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    border: 1px solid rgba(0, 242, 254, 0.3);
+}
+
+.step-desc-text {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.margin-top {
+    margin-top: 0.5rem;
 }
 
 /* Detailed Execution Step Logs Card */

@@ -23,30 +23,30 @@
             <p class="subtitle">Adversarial LLM Paraphrasing, Homoglyph & Token Perturbation Pipeline</p>
         </header>
 
-        <!-- Pipeline Workflow Diagram -->
+        <!-- Pipeline Workflow Diagram (Dynamic Step Highlighting) -->
         <section class="clay-card pipeline-card">
             <div class="pipeline-steps">
-                <div class="step-chip">
+                <div id="stepChip1" class="step-chip">
                     <span class="step-num">1</span>
                     <span class="step-name">Sanitize</span>
                 </div>
                 <div class="step-arrow">→</div>
-                <div class="step-chip">
+                <div id="stepChip2" class="step-chip">
                     <span class="step-num">2</span>
                     <span class="step-name">Detect (Pre)</span>
                 </div>
                 <div class="step-arrow">→</div>
-                <div class="step-chip highlight">
+                <div id="stepChip3" class="step-chip">
                     <span class="step-num">3</span>
                     <span class="step-name">Attack</span>
                 </div>
                 <div class="step-arrow">→</div>
-                <div class="step-chip">
+                <div id="stepChip4" class="step-chip">
                     <span class="step-num">4</span>
                     <span class="step-name">Perturb</span>
                 </div>
                 <div class="step-arrow">→</div>
-                <div class="step-chip">
+                <div id="stepChip5" class="step-chip">
                     <span class="step-num">5</span>
                     <span class="step-name">Detect (Post)</span>
                 </div>
@@ -143,14 +143,6 @@
                 <!-- Cleaned Output Text -->
                 <textarea id="outputText" placeholder="Clean, un-watermarked output text will appear here..." readonly rows="6"></textarea>
 
-                <!-- Detailed Execution Step Logs -->
-                <div class="logs-card">
-                    <div class="logs-header">Execution Logs & Pipeline Diagnostics</div>
-                    <ul id="stepLogsList" class="logs-list">
-                        <li>System ready. Select an attack mode and click "Remove Watermark".</li>
-                    </ul>
-                </div>
-
                 <!-- Status Footer -->
                 <div class="status-footer">
                     <span id="timingBadge">Runtime: 0 ms</span>
@@ -158,6 +150,40 @@
                 </div>
             </div>
         </main>
+
+        <!-- Paragraph Transformation Timeline Section -->
+        <section id="transformationSection" class="clay-card timeline-card hidden">
+            <div class="card-header">
+                <h2>Paragraph Transformation Timeline</h2>
+                <span class="subtitle">Inspect text output after each pipeline step</span>
+            </div>
+
+            <!-- Timeline Navigation Tabs -->
+            <div id="timelineTabs" class="timeline-tabs">
+                <button class="tab-btn active" data-step="1">Step 1: Sanitize</button>
+                <button class="tab-btn" data-step="2">Step 2: Pre-Detect</button>
+                <button class="tab-btn" data-step="3">Step 3: Attack</button>
+                <button class="tab-btn" data-step="4">Step 4: Perturb</button>
+                <button class="tab-btn" data-step="5">Step 5: Final Clean</button>
+            </div>
+
+            <!-- Step Output Inspector -->
+            <div class="step-inspector-box">
+                <div class="step-info-row">
+                    <span id="stepTitle" class="step-title-badge">Step 1: Sanitize</span>
+                    <span id="stepDesc" class="step-desc-text">Stripped zero-width unicode characters</span>
+                </div>
+                <textarea id="stepTextOutput" readonly rows="5"></textarea>
+            </div>
+
+            <!-- Detailed Execution Step Logs -->
+            <div class="logs-card margin-top">
+                <div class="logs-header">Pipeline Execution Log</div>
+                <ul id="stepLogsList" class="logs-list">
+                    <li>System ready.</li>
+                </ul>
+            </div>
+        </section>
     </div>
 
     <script src="/static/app.js"></script>

@@ -27,6 +27,14 @@ class DetectionScore(BaseModel):
     sample_tokens: int
 
 
+class StepResult(BaseModel):
+    step_number: int
+    step_name: str
+    text_after_step: str
+    g_value: Optional[float] = None
+    description: str
+
+
 class WatermarkResponse(BaseModel):
     clean_text: str
     sanitized_char_count: int
@@ -36,6 +44,7 @@ class WatermarkResponse(BaseModel):
     is_clean: bool
     verdict_title: str
     step_logs: List[str]
+    intermediate_steps: List[StepResult]
     attack_used: str
     processing_time_ms: int
 
