@@ -4,11 +4,11 @@
     --clay-surface-light: #252a3b;
     --clay-border: rgba(255, 255, 255, 0.08);
     
-    /* Clay 3D Shadow System */
-    --clay-shadow-out: 8px 8px 20px #090a0f, -8px -8px 20px #232839;
-    --clay-shadow-in: inset 3px 3px 6px rgba(255, 255, 255, 0.07), inset -3px -3px 6px rgba(0, 0, 0, 0.4);
-    --clay-btn-shadow: 5px 5px 12px #0a0b10, -5px -5px 12px #262b3d;
-    --clay-btn-active: inset 3px 3px 6px #08090d, inset -3px -3px 6px #24293a;
+    /* Clay 3D Shadow System (Hype4 Academy Formula) */
+    --clay-shadow-out: 10px 15px 30px rgba(0, 0, 0, 0.5), -5px -5px 15px rgba(255, 255, 255, 0.03);
+    --clay-shadow-in: inset 4px 4px 8px rgba(255, 255, 255, 0.08), inset -6px -6px 12px rgba(0, 0, 0, 0.5);
+    --clay-btn-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.15), inset -3px -3px 6px rgba(0, 0, 0, 0.4), 6px 10px 20px rgba(0, 0, 0, 0.4);
+    --clay-btn-active: inset -2px -2px 4px rgba(255, 255, 255, 0.1), inset 4px 4px 8px rgba(0, 0, 0, 0.6);
 
     /* Colors */
     --accent-cyan: #00f2fe;
