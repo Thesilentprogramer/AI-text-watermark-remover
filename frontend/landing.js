@@ -1,55 +1,58 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // MathJax typesetting function
     function typeSetMath() {
-        if (window.MathJax && window.MathJax.typesetPromise) {
-            window.MathJax.typesetPromise();
+        if (window.MathJax) {
+            if (window.MathJax.typesetPromise) {
+                window.MathJax.typesetPromise().catch(err => console.log('MathJax typeset error:', err));
+            } else if (window.MathJax.typeset) {
+                window.MathJax.typeset();
+            }
         }
     }
 
     // ==========================================
-    // CAROUSEL LOGIC
+    // CAROUSEL DATASET (6 ATTACK STRATEGIES)
     // ==========================================
     const CAROUSEL_SLIDES = [
         {
             title: "Mode 1: Combined Paraphrase + Perturb",
             input: "Google DeepMind SynthID technology embeds an imperceptible statistical watermark into AI-generated text by biasing token selection probabilities during logit processing.",
             output: "DeepMind's SynthID framework incorporates a subtle statistical signal into AI text by altering token sampling distributions. Paraphrasing cleanly erases this signature.",
-            formula: "$$P'(x_i | x_{<i}) = P(x_i | x_{<i}) \\times \\left(1 + g_i - \\sum g_j P(x_j)\\right)$$",
+            formula: "\\[ P'(x_i | x_{<i}) = P(x_i | x_{<i}) \\cdot \\left(1 + g_i - \\sum_j g_j P(x_j)\\right) \\]",
             desc: "SynthID biases logit probabilities by hashing n-gram context tokens ($k=4$). Paraphrasing regenerates the token sequence from scratch, resetting context hashes and reducing mean G-values from 0.72 to 0.49."
         },
         {
             title: "Mode 2: Gemma 4 Paraphrase",
             input: "The watermark resides within n-gram hash patterns across token sequences and survives simple formatting changes.",
             output: "The statistical signal exists in sequence n-gram context patterns, rendering basic edits ineffective.",
-            formula: "$$T' = \\text{AutoModelForImageTextToText}(T), \\quad \\text{Hash}(T') \\neq \\text{Hash}(T)$$",
+            formula: "\\[ T' = \\text{Paraphrase}(T) \\implies \\text{Hash}(T') \\neq \\text{Hash}(T) \\]",
             desc: "Uses a 128K context window LLM to completely regenerate the text, passing native system role prompts and stripping thinking tokens."
         },
         {
             title: "Mode 3: Homoglyph Attack",
             input: "SynthID logit biasing enables detection with high confidence.",
             output: "SуnthID lоgit biаsing еnаblеs dеtесtiоn with high соnfidеnсе.",
-            formula: "$$c_{\\text{ASCII}} \\rightarrow c_{\\text{Unicode}}, \\quad \\text{Tokenizer}(c_{\\text{Unicode}}) \\neq \\text{Tokenizer}(c_{\\text{ASCII}})$$",
+            formula: "\\[ c_{\\text{ASCII}} \\to c_{\\text{Cyrillic}} \\implies \\text{Tokenizer}(c_{\\text{Cyrillic}}) \\neq \\text{Tokenizer}(c_{\\text{ASCII}}) \\]",
             desc: "Replaces ASCII characters with visually identical Cyrillic/Greek Unicode lookalikes, breaking tokenizer subword indexing while remaining human-readable."
         },
         {
             title: "Mode 4: Sentence Shuffling Attack",
             input: "Sentence 1: SynthID embeds watermarks. Sentence 2: Paraphrasing erases it. Sentence 3: Detection measures G-values.",
             output: "Sentence 2: Paraphrasing erases it. Sentence 1: SynthID embeds watermarks. Sentence 3: Detection measures G-values.",
-            formula: "$$S_{\\pi(1)}, S_{\\pi(2)}, \\dots, S_{\\pi(n)}$$",
+            formula: "\\[ (S_1, S_2, \\dots, S_n) \\to (S_{\\pi(1)}, S_{\\pi(2)}, \\dots, S_{\\pi(n)}) \\]",
             desc: "Permutes independent sentence order to disrupt 4-gram context boundary hashes between sentences."
         },
         {
             title: "Mode 5: Token Perturbation Only",
             input: "This sample text illustrates how the statistical excess of green-list tokens enables detection.",
             output: "This sample content demonstrates how the statistical surplus of green-list words facilitates identification.",
-            formula: "$$w_i \\rightarrow \\text{Synonym}(w_i), \\quad r = 0.15$$",
+            formula: "\\[ w_i \\to \\text{Synonym}(w_i), \\quad r = 0.15 \\]",
             desc: "Replaces selected words with natural synonyms to introduce noise into residual n-gram green-list distributions."
         },
         {
             title: "Mode 6: Unicode Character Sanitizer",
             input: "Text containing hidden zero-width characters: Hello\\u200B World\\uFEFF!",
             output: "Cleaned character text: Hello World!",
-            formula: "$$\\text{Text}' = \\text{Text} \\setminus \\{\\text{U+200B}, \\text{U+FEFF}, \\text{U+200D}\\}$$",
+            formula: "\\[ T' = T \\setminus \\{ \\text{U+200B}, \\text{U+FEFF}, \\text{U+200D} \\} \\]",
             desc: "Instantly strips zero-width non-joiners and hidden unicode character tricks injected at the character level."
         }
     ];
@@ -63,7 +66,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const slideIndicator = document.getElementById("slideIndicator");
 
     function renderSlide(idx) {
-        if (!carouselTitle) return; // safeguard if on wrong page
+        if (!carouselTitle) return;
         const slide = CAROUSEL_SLIDES[idx];
         carouselTitle.innerText = slide.title;
         slideInputText.innerText = slide.input;
@@ -71,7 +74,9 @@ document.addEventListener("DOMContentLoaded", () => {
         slideMathFormula.innerHTML = slide.formula;
         slideMathDesc.innerHTML = slide.desc;
         slideIndicator.innerText = `${idx + 1}/${CAROUSEL_SLIDES.length}`;
-        typeSetMath();
+        
+        // Trigger MathJax re-render
+        setTimeout(typeSetMath, 50);
     }
 
     const prevSlideBtn = document.getElementById("prevSlideBtn");
@@ -88,6 +93,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         renderSlide(0);
     }
+
+    // Initial MathJax trigger
+    setTimeout(typeSetMath, 300);
 
     // ==========================================
     // AI PROVIDER BENCHMARKS

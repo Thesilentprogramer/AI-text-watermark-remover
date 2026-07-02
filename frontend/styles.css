@@ -13,6 +13,7 @@
     --neo-green: #bbf7d0;
     --neo-red: #ff8b8b;
     --neo-white: #ffffff;
+    --neo-dark: #12141d;
     
     --text-main: #000000;
     --text-muted: #333333;
@@ -117,7 +118,7 @@ h1, h2, h3, h4 {
 .neo-btn.primary { background: var(--neo-pink); }
 .neo-btn.small { padding: 0.4rem 0.8rem; font-size: 0.85rem; box-shadow: 2px 2px 0 var(--border-color); }
 .neo-btn.huge-btn { font-size: 1.2rem; padding: 1rem 2rem; box-shadow: 6px 6px 0 var(--border-color); }
-.neo-btn.icon-btn { padding: 0.5rem; background: var(--neo-cyan); font-size: 1.2rem; line-height: 1; }
+.neo-btn.icon-btn { padding: 0.5rem 1rem; background: var(--neo-cyan); font-size: 1.2rem; line-height: 1; }
 .neo-btn.full-width { width: 100%; }
 
 .neo-btn:active {
@@ -192,6 +193,7 @@ h1, h2, h3, h4 {
     align-items: center;
     margin-bottom: 1.5rem;
     font-weight: 700;
+    flex-wrap: wrap;
 }
 .chat-container {
     display: flex;
@@ -219,16 +221,62 @@ h1, h2, h3, h4 {
 }
 .status-row { display: flex; gap: 0.5rem; margin-bottom: 0.5rem; }
 
-/* Math Box */
+/* Math Box & Formulas Fix */
 .math-box {
     background: var(--neo-yellow);
     border: 3px solid #000;
     padding: 1.5rem;
     box-shadow: 4px 4px 0 #000;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8rem;
 }
+
+.math-header {
+    font-weight: 800;
+    font-size: 0.85rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: #000;
+    color: var(--neo-yellow);
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    width: max-content;
+    border: 2px solid #000;
+}
+
+.formula-container {
+    background: #ffffff;
+    border: 3px solid #000;
+    padding: 1rem;
+    box-shadow: 3px 3px 0 #000;
+    min-height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow-x: auto;
+}
+
 .formula {
-    background: #fff; border: 2px solid #000; padding: 1rem; margin: 1rem 0;
-    text-align: center; font-size: 1.1rem; overflow-x: auto;
+    font-size: 1.2rem;
+    font-weight: 700;
+    width: 100%;
+    text-align: center;
+    color: #000;
+}
+
+.formula mjx-container {
+    font-size: 115% !important;
+    margin: 0.5em 0 !important;
+}
+
+.math-desc {
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.5;
+    background: #ffffff;
+    border: 2px solid #000;
+    padding: 0.8rem 1rem;
 }
 
 /* Diff Visualizer Neo */
@@ -309,12 +357,38 @@ h1, h2, h3, h4 {
     display: flex; justify-content: space-between; margin-top: 1rem; border-top: 3px solid #000; padding-top: 0.5rem;
 }
 
+/* Pipeline Logs Fix (High Contrast & Visible Text) */
 .logs-container {
-    background: #000; color: var(--neo-green); padding: 1rem; font-family: 'JetBrains Mono', monospace;
-    border: 3px solid #000; box-shadow: 4px 4px 0 var(--neo-pink); margin-top: 1.5rem;
+    background: var(--neo-dark);
+    color: #ffffff;
+    padding: 1.2rem;
+    border: 3px solid #000;
+    box-shadow: 4px 4px 0 var(--neo-pink);
+    margin-top: 1.5rem;
 }
-.logs-container h4 { color: #fff; margin-bottom: 0.5rem; }
-.logs-container ul { list-style: none; padding: 0; }
-.logs-container li { margin-bottom: 0.3rem; font-size: 0.85rem; }
+.logs-container h4 {
+    color: var(--neo-yellow);
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem;
+    letter-spacing: 1px;
+}
+.logs-container ul {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 180px;
+    overflow-y: auto;
+}
+.logs-container li {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    color: var(--neo-green);
+    background: #1c202e;
+    padding: 0.5rem 0.8rem;
+    border: 1px solid #333;
+}
 
 .hidden { display: none !important; }

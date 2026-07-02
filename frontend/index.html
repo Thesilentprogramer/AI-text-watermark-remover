@@ -4,14 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SynthID Watermark Remover</title>
-    <!-- MathJax for rendering LaTeX formulas -->
+    <!-- MathJax Configuration -->
     <script>
-        MathJax = {
-            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
-            svg: { fontCache: 'global' }
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$'], ['\\(', '\\)']],
+                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+            },
+            svg: {
+                fontCache: 'global'
+            },
+            startup: {
+                pageReady: () => {
+                    return MathJax.startup.defaultPageReady();
+                }
+            }
         };
     </script>
-    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -38,9 +48,9 @@
             <div class="section-title">
                 <h2>Attack Strategies</h2>
                 <div class="carousel-nav">
-                    <button id="prevSlideBtn" class="neo-btn icon-btn">&larr;</button>
+                    <button id="prevSlideBtn" class="neo-btn icon-btn" aria-label="Previous Slide">&larr;</button>
                     <span id="slideIndicator" class="slide-indicator">1/6</span>
-                    <button id="nextSlideBtn" class="neo-btn icon-btn">&rarr;</button>
+                    <button id="nextSlideBtn" class="neo-btn icon-btn" aria-label="Next Slide">&rarr;</button>
                 </div>
             </div>
 
@@ -72,11 +82,13 @@
                 </div>
 
                 <div class="math-box">
-                    <h4>Mathematical Formulation</h4>
-                    <div class="formula" id="slideMathFormula">
-                        $$P'(x_i | x_{<i}) = P(x_i | x_{<i}) \times \left(1 + g_i - \sum g_j P(x_j)\right)$$
+                    <div class="math-header">MATHEMATICAL FORMULATION</div>
+                    <div class="formula-container">
+                        <div id="slideMathFormula" class="formula">
+                            \[ P'(x_i | x_{<i}) = P(x_i | x_{<i}) \cdot \left(1 + g_i - \bar{g}\right) \]
+                        </div>
                     </div>
-                    <p id="slideMathDesc">SynthID biases logit probabilities by hashing n-gram context tokens ($k=4$). Paraphrasing regenerates the token sequence from scratch, resetting context hashes and reducing mean G-values from 0.72 to 0.49.</p>
+                    <p id="slideMathDesc" class="math-desc">SynthID biases logit probabilities by hashing n-gram context tokens ($k=4$). Paraphrasing regenerates the token sequence from scratch, resetting context hashes and reducing mean G-values from 0.72 to 0.49.</p>
                 </div>
             </div>
         </section>
