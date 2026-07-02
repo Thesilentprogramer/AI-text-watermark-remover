@@ -1,7 +1,7 @@
 """
 SynthID Attack Pipeline Orchestrator
 Executes & tracks text transformation across Step 1 (Sanitize) -> Step 2 (Detect Pre) -> Step 3 (Attack) -> Step 4 (Perturb) -> Step 5 (Detect Post)
-Includes Word-Level Diff Visualizer output.
+Includes Auto-Adaptive Attack Selector & Word-Level Diff Visualizer.
 """
 
 import time
@@ -11,6 +11,7 @@ from attacks.token_perturbation import TokenPerturbationAttack
 from attacks.homoglyph import HomoglyphAttack
 from attacks.sentence_shuffling import SentenceShufflingAttack
 from attacks.diff_engine import generate_word_diff_html
+from attacks.auto_selector import evaluate_optimal_attack
 from app.model_loader import get_paraphrase_engine, get_detector_engine
 from app.schemas import WatermarkRequest, WatermarkResponse, DetectionScore, StepResult
 
@@ -29,7 +30,7 @@ class AttackPipeline:
         intermediate_steps = []
 
         raw_text = request.text
-        attack_mode = request.attack_mode.lower() if request.attack_mode else "combined"
+        req_mode = request.attack_mode.lower() if request.attack_mode else "auto"
 
         detector = get_detector_engine()
         paraphraser = get_paraphrase_engine()
@@ -69,6 +70,23 @@ class AttackPipeline:
             description=s2_desc
         ))
 
+        # AUTO-ADAPTIVE ATTACK SELECTION
+        auto_selected = False
+        auto_rationale = None
+
+        if req_mode == "auto":
+            auto_res = evaluate_optimal_attack(
+                text=sanitized_text,
+                pre_g_value=pre_score.g_value,
+                zero_width_count=removed_chars
+            )
+            attack_mode = auto_res["attack_mode"]
+            auto_rationale = auto_res["rationale"]
+            auto_selected = True
+            step_logs.append(f"⚡ Auto-Selected Attack Mode '{attack_mode}': {auto_rationale}")
+        else:
+            attack_mode = req_mode
+
         current_text = sanitized_text
 
         # Step 3 & 4 — ATTACK EXECUTION
@@ -95,7 +113,7 @@ class AttackPipeline:
 
         intermediate_steps.append(StepResult(
             step_number=3,
-            step_name="Primary Attack Pass",
+            step_name=f"Primary Attack Pass ({attack_mode})",
             text_after_step=current_text,
             g_value=None,
             description=s3_desc
@@ -174,5 +192,7 @@ class AttackPipeline:
             step_logs=step_logs,
             intermediate_steps=intermediate_steps,
             attack_used=attack_mode,
+            auto_selected=auto_selected,
+            auto_rationale=auto_rationale,
             processing_time_ms=elapsed_ms
         )

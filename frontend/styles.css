@@ -12,6 +12,7 @@
     --neo-cyan: #a0e6ff;
     --neo-green: #bbf7d0;
     --neo-red: #ff8b8b;
+    --neo-purple: #d8b4fe;
     --neo-white: #ffffff;
     --neo-dark: #12141d;
     
@@ -277,6 +278,37 @@ h1, h2, h3, h4 {
     background: #ffffff;
     border: 2px solid #000;
     padding: 0.8rem 1rem;
+}
+
+/* Auto Rationale Box */
+.auto-rationale-box {
+    background: var(--neo-purple);
+    border: 3px solid #000;
+    box-shadow: 3px 3px 0 #000;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.auto-tag {
+    font-weight: 800;
+    font-size: 0.75rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    background: #000;
+    color: var(--neo-purple);
+    padding: 0.15rem 0.5rem;
+    width: max-content;
+    border: 1px solid #000;
+}
+
+.auto-text {
+    font-size: 0.88rem;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #000;
 }
 
 /* Diff Visualizer Neo */

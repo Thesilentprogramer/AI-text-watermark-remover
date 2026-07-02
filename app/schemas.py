@@ -5,8 +5,8 @@ from typing import Optional, List, Dict, Any
 class WatermarkRequest(BaseModel):
     text: str = Field(..., min_length=1, description="The watermarked input text")
     attack_mode: Optional[str] = Field(
-        default="combined",
-        description="Attack strategy: 'combined', 'paraphrase', 'perturb', 'homoglyph', 'shuffle', or 'sanitize'"
+        default="auto",
+        description="Attack strategy: 'auto' (intelligent adaptive selector), 'combined', 'paraphrase', 'perturb', 'homoglyph', 'shuffle', or 'sanitize'"
     )
     enable_thinking: Optional[bool] = Field(
         default=True,
@@ -47,6 +47,8 @@ class WatermarkResponse(BaseModel):
     step_logs: List[str]
     intermediate_steps: List[StepResult]
     attack_used: str
+    auto_selected: bool = False
+    auto_rationale: Optional[str] = None
     processing_time_ms: int
 
 

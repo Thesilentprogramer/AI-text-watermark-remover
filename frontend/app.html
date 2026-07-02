@@ -33,7 +33,8 @@
                 <div class="control-group">
                     <label for="attackMode">Attack Strategy</label>
                     <select id="attackMode" class="neo-select">
-                        <option value="combined" selected>Combined (Paraphrase + Perturb)</option>
+                        <option value="auto" selected>⚡ Auto-Adaptive Attack (Recommended)</option>
+                        <option value="combined">Combined (Paraphrase + Perturb)</option>
                         <option value="paraphrase">Paraphrase Only (Gemma 4 E2B)</option>
                         <option value="homoglyph">Homoglyph Attack (Unicode Lookalikes)</option>
                         <option value="shuffle">Sentence Shuffling Attack</option>
@@ -71,6 +72,12 @@
             <!-- Banner -->
             <div id="verdictBanner" class="neo-banner">
                 <span id="verdictText">Awaiting input...</span>
+            </div>
+
+            <!-- Auto Rationale Box -->
+            <div id="autoRationaleBox" class="auto-rationale-box hidden">
+                <span class="auto-tag">⚡ AUTO-ADAPTIVE RATIONALE</span>
+                <p id="autoRationaleText" class="auto-text">Analysing metrics...</p>
             </div>
 
             <!-- Score Gauges -->

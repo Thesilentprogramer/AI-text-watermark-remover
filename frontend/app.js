@@ -18,6 +18,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const verdictBanner = document.getElementById("verdictBanner");
     const verdictText = document.getElementById("verdictText");
+    const autoRationaleBox = document.getElementById("autoRationaleBox");
+    const autoRationaleText = document.getElementById("autoRationaleText");
+
     const preGVal = document.getElementById("preGVal");
     const preBadge = document.getElementById("preBadge");
     const postGVal = document.getElementById("postGVal");
@@ -79,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnSpinner.classList.remove("hidden");
         verdictBanner.className = "neo-banner";
         verdictText.innerText = "Processing...";
+        autoRationaleBox.classList.add("hidden");
 
         try {
             const response = await fetch("/remove-watermark", {
@@ -123,6 +127,14 @@ document.addEventListener("DOMContentLoaded", () => {
             verdictBanner.className = "neo-banner yellow";
         } else {
             verdictBanner.className = "neo-banner red";
+        }
+
+        // Render Auto Rationale if Auto-Selected
+        if (data.auto_selected && data.auto_rationale) {
+            autoRationaleBox.classList.remove("hidden");
+            autoRationaleText.innerText = data.auto_rationale;
+        } else {
+            autoRationaleBox.classList.add("hidden");
         }
 
         preGVal.innerText = data.pre_attack.g_value.toFixed(2);
