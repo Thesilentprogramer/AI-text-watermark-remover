@@ -25,6 +25,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const preBadge = document.getElementById("preBadge");
     const postGVal = document.getElementById("postGVal");
     const postBadge = document.getElementById("postBadge");
+    const prePplVal = document.getElementById("prePplVal");
+    const prePplBadge = document.getElementById("prePplBadge");
+    const postPplVal = document.getElementById("postPplVal");
+    const postPplBadge = document.getElementById("postPplBadge");
     
     const timingBadge = document.getElementById("timingBadge");
     const reductionBadge = document.getElementById("reductionBadge");
@@ -144,6 +148,15 @@ document.addEventListener("DOMContentLoaded", () => {
         postGVal.innerText = data.post_attack.g_value.toFixed(2);
         postBadge.className = data.post_attack.is_watermarked ? "neo-badge red" : "neo-badge green";
         postBadge.innerText = data.post_attack.is_watermarked ? "Watermarked" : "Clean";
+
+        if (prePplVal && data.pre_attack.perplexity != null && data.pre_attack.perplexity > 0) {
+            prePplVal.innerText = data.pre_attack.perplexity.toFixed(1);
+            prePplBadge.innerText = data.pre_attack.perplexity_label || "—";
+        }
+        if (postPplVal && data.post_attack.perplexity != null && data.post_attack.perplexity > 0) {
+            postPplVal.innerText = data.post_attack.perplexity.toFixed(1);
+            postPplBadge.innerText = data.post_attack.perplexity_label || "—";
+        }
 
         timingBadge.innerText = `Runtime: ${data.processing_time_ms}ms`;
         reductionBadge.innerText = `Reduction: ${data.watermark_reduction_pct.toFixed(1)}%`;

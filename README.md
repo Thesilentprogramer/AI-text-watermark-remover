@@ -22,6 +22,22 @@ This project is not just a standard wrapper around an API — it is an **adversa
 
 ---
 
+## Confidence-Based Attack Selector (Original Contribution)
+
+No existing watermark-removal tool auto-selects the attack strategy. The upstream [reverse-SynthID-text](https://github.com/aloshdenny/reverse-SynthID-text) CLI requires manual `--method` selection. This project adds a **confidence-based selector** that reads input characteristics and picks the optimal attack:
+
+| Condition | Auto-selected mode | Rationale |
+|---|---|---|
+| G-value > 0.75 | `combined` | Very strong watermark — run all layers |
+| Unicode anomaly detected | `sanitize_perturb` | Character-level watermark — sanitize then perturb |
+| G ≥ 0.55, tokens < 200 | `backtranslate` | Short text — fast EN→DE→EN back-translation |
+| G ≥ 0.55, tokens ≥ 200 | `paraphrase` | Long text — thorough Gemma 4 rewrite |
+| Clean input | `none` | No attack needed |
+
+Set `attack_mode: "auto"` in the API request to enable. The selector's rationale is returned in `auto_rationale` and displayed in the UI.
+
+---
+
 ## 5-Step Adversarial Pipeline Architecture
 
 ```
@@ -54,7 +70,7 @@ Show User: Before G-Value | After G-Value | % Reduction | Clean Output Text
 |---|---|
 | **Backend** | FastAPI, Python 3.11, PyTorch 2.2+, Uvicorn |
 | **ML Model** | `google/gemma-4-E2B-it` via Hugging Face `AutoModelForImageTextToText` & `AutoProcessor` (`bfloat16`, `device_map="auto"`) |
-| **Watermark Engine** | `synthid-text`, GPT-2 Tokenizer (`transformers`), `WatermarkDetector` |
+| **Watermark Engine** | Vendored `synthid-text` via [reverse-SynthID-text](https://github.com/aloshdenny/reverse-SynthID-text), `ExtendedDetector`, GPT-2 tokenizer |
 | **UI Theme** | **Claymorphism** — Dual inner light/dark shadows, 3D inflated cards (`24px`), tactile pill buttons based on [Hype4 Academy](https://hype4.academy/articles/design/claymorphism-in-user-interfaces) principles |
 | **Testing** | Pytest, FastAPI TestClient |
 
@@ -75,22 +91,30 @@ Designed according to Michał Malewicz's **Claymorphism** specification:
 AI-text-watermark-remover/
 ├── app/
 │   ├── main.py              ← FastAPI endpoints & lifespan startup
-│   ├── pipeline.py          ← 5-step attack pipeline orchestrator
+│   ├── pipeline.py          ← Layer-based attack pipeline orchestrator
 │   ├── model_loader.py      ← Singleton model loader
 │   └── schemas.py           ← Pydantic request/response models
 ├── attacks/
-│   ├── sanitizer.py         ← Step 1: Zero-width unicode character stripper
-│   ├── gemma4_paraphrase.py ← Step 3: Gemma 4 E2B paraphrasing engine
-│   └── token_perturbation.py← Step 4: Secondary synonym perturbation pass
+│   ├── sanitizer.py         ← Step 1: Zero-width unicode stripper
+│   ├── gemma4_paraphrase.py ← Gemma 4 E2B paraphrasing (custom rewrite)
+│   ├── backtranslate.py     ← Helsinki-NLP back-translation attack
+│   ├── entropy.py           ← Sentence variation + synonym entropy layer
+│   └── auto_selector.py     ← Confidence-based attack selector (original)
 ├── reverse_synthid/
-│   └── detector.py          ← Step 2 & 5: WatermarkDetector wrapper (synthid-text + GPT-2)
+│   ├── reverse_synthid.py   ← Vendored upstream attack toolkit
+│   ├── extended_detector.py ← SynthID G-value + optional perplexity
+│   └── src/synthid_text/    ← Vendored synthid-text module
 ├── frontend/
-│   ├── index.html           ← Claymorphism UI layout & step diagram
-│   ├── styles.css           ← Claymorphism CSS 3D design system
-│   └── app.js               ← Async fetch controller & score gauge renderer
+│   ├── index.html           ← Landing page
+│   ├── app.html             ← Claymorphism workspace UI
+│   ├── styles.css           ← Claymorphism CSS design system
+│   └── app.js               ← Async fetch controller & score gauges
 ├── tests/
-│   ├── test_detector.py     ← Unit tests for sanitizer & detector
-│   └── test_api.py          ← Integration tests for FastAPI routes
+│   ├── test_detector.py
+│   ├── test_auto_selector.py
+│   ├── test_api.py
+│   ├── test_backtranslate.py
+│   └── test_entropy.py
 ├── requirements.txt
 ├── .env.example
 ├── DEVELOPMENT.md

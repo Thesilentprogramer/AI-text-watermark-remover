@@ -1,21 +1,38 @@
 """
 SynthID Attack Pipeline Orchestrator
-Executes & tracks text transformation across Step 1 (Sanitize) -> Step 2 (Detect Pre) -> Step 3 (Attack) -> Step 4 (Perturb) -> Step 5 (Detect Post)
-Includes Auto-Adaptive Attack Selector & Word-Level Diff Visualizer.
+Executes & tracks text transformation across sanitize → detect(pre) → attack → detect(post).
+Includes confidence-based attack selector and word-level diff visualizer.
 """
 
 import time
 import logging
+
 from attacks.sanitizer import sanitize_text
-from attacks.token_perturbation import TokenPerturbationAttack
-from attacks.homoglyph import HomoglyphAttack
-from attacks.sentence_shuffling import SentenceShufflingAttack
 from attacks.diff_engine import generate_word_diff_html
-from attacks.auto_selector import evaluate_optimal_attack
-from app.model_loader import get_paraphrase_engine, get_detector_engine
+from attacks.auto_selector import select_attack, AttackPlan
+from reverse_synthid.reverse_synthid import TokenPerturbationAttack, HomoglyphAttack
+from attacks.sentence_shuffling import SentenceShufflingAttack
+from app.model_loader import (
+    get_paraphrase_engine,
+    get_detector_engine,
+    get_backtranslate_engine,
+    get_entropy_engine,
+)
 from app.schemas import WatermarkRequest, WatermarkResponse, DetectionScore, StepResult
 
 logger = logging.getLogger("pipeline")
+
+MANUAL_LAYER_MAP = {
+    "combined": ["paraphrase", "perturb", "entropy"],
+    "paraphrase": ["paraphrase"],
+    "perturb": ["perturb"],
+    "sanitize_perturb": ["perturb"],
+    "backtranslate": ["backtranslate"],
+    "homoglyph": ["homoglyph"],
+    "shuffle": ["shuffle"],
+    "none": [],
+    "sanitize": [],
+}
 
 
 class AttackPipeline:
@@ -23,6 +40,79 @@ class AttackPipeline:
         self.perturb_engine = TokenPerturbationAttack()
         self.homoglyph_engine = HomoglyphAttack()
         self.shuffle_engine = SentenceShufflingAttack()
+
+    def _execute_layers(
+        self,
+        layers: list,
+        current_text: str,
+        request: WatermarkRequest,
+        step_logs: list,
+        intermediate_steps: list,
+        attack_mode: str,
+    ) -> str:
+        paraphraser = get_paraphrase_engine()
+        step_num = 3
+
+        for layer in layers:
+            if layer == "paraphrase":
+                current_text = paraphraser.paraphrase(
+                    text=current_text,
+                    enable_thinking=request.enable_thinking,
+                ).strip()
+                desc = "Gemma 4 E2B paraphrased token sequence under fresh probability distributions."
+                step_logs.append(f"Step {step_num} (Paraphrase): {desc}")
+
+            elif layer == "backtranslate":
+                bt = get_backtranslate_engine()
+                result = bt.attack(current_text)
+                current_text = result.final_text.strip()
+                desc = f"Back-translated via {result.pivot_language.upper()} pivot language."
+                step_logs.append(f"Step {step_num} (Back-translate): {desc}")
+
+            elif layer == "perturb":
+                rate = request.substitution_rate or 0.15
+                current_text = self.perturb_engine.substitute_synonyms(
+                    current_text,
+                    substitution_rate=rate,
+                )
+                desc = f"Applied synonym perturbation (rate={rate})."
+                step_logs.append(f"Step {step_num} (Perturb): {desc}")
+
+            elif layer == "entropy":
+                entropy = get_entropy_engine()
+                current_text = entropy.apply(current_text, synonym_rate=request.substitution_rate or 0.15)
+                desc = "Applied linguistic entropy layer (sentence variation + synonym swap)."
+                step_logs.append(f"Step {step_num} (Entropy): {desc}")
+
+            elif layer == "homoglyph":
+                current_text = self.homoglyph_engine.apply_homoglyphs(
+                    current_text,
+                    rate=request.substitution_rate or 0.25,
+                )
+                desc = "Replaced ASCII characters with Cyrillic homoglyphs."
+                step_logs.append(f"Step {step_num} (Homoglyph): {desc}")
+
+            elif layer == "shuffle":
+                current_text = self.shuffle_engine.transform(current_text)
+                desc = "Shuffled sentence order to break n-gram context boundaries."
+                step_logs.append(f"Step {step_num} (Shuffle): {desc}")
+
+            else:
+                continue
+
+            intermediate_steps.append(StepResult(
+                step_number=step_num,
+                step_name=f"Attack Layer ({layer})",
+                text_after_step=current_text,
+                g_value=None,
+                description=desc,
+            ))
+            step_num += 1
+
+        if not layers:
+            step_logs.append(f"Step 3 (Attack): No attack layers applied for mode '{attack_mode}'.")
+
+        return current_text
 
     def run(self, request: WatermarkRequest) -> WatermarkResponse:
         start_time = time.time()
@@ -33,12 +123,12 @@ class AttackPipeline:
         req_mode = request.attack_mode.lower() if request.attack_mode else "auto"
 
         detector = get_detector_engine()
-        paraphraser = get_paraphrase_engine()
 
         # Step 1 — SANITIZE
         sanitization_res = sanitize_text(raw_text)
         sanitized_text = sanitization_res["sanitized_text"]
         removed_chars = sanitization_res["removed_count"]
+        anomaly_score = sanitization_res.get("anomaly_score", 0.0)
 
         if removed_chars > 0:
             s1_desc = f"Stripped {removed_chars} hidden zero-width unicode characters."
@@ -51,15 +141,22 @@ class AttackPipeline:
             step_name="Sanitize Unicode",
             text_after_step=sanitized_text,
             g_value=None,
-            description=s1_desc
+            description=s1_desc,
         ))
 
         # Step 2 — DETECT (before)
-        pre_detect_dict = detector.detect(sanitized_text, is_post_attack=False)
+        pre_detect_dict = detector.detect(sanitized_text)
         pre_score = DetectionScore(**pre_detect_dict)
+        token_count = detector.count_tokens(sanitized_text)
 
         pre_status = "WATERMARKED" if pre_score.is_watermarked else "UNWATERMARKED"
-        s2_desc = f"Scanned input n-gram statistics → Baseline G-Value = {pre_score.g_value:.4f} ({pre_status})"
+        ppl_note = ""
+        if pre_score.perplexity is not None and pre_score.perplexity > 0:
+            ppl_note = f", Perplexity={pre_score.perplexity:.1f}"
+        s2_desc = (
+            f"Scanned input n-gram statistics → G-Value={pre_score.g_value:.4f} "
+            f"({pre_status}, {token_count} tokens{ppl_note})"
+        )
         step_logs.append(f"Step 2 (Detect Pre): {s2_desc}")
 
         intermediate_steps.append(StepResult(
@@ -67,85 +164,57 @@ class AttackPipeline:
             step_name="Pre-Attack Detection",
             text_after_step=sanitized_text,
             g_value=pre_score.g_value,
-            description=s2_desc
+            description=s2_desc,
         ))
 
-        # AUTO-ADAPTIVE ATTACK SELECTION
+        # Attack selection
         auto_selected = False
         auto_rationale = None
+        attack_plan: AttackPlan = None
 
         if req_mode == "auto":
-            auto_res = evaluate_optimal_attack(
-                text=sanitized_text,
+            attack_plan = select_attack(
                 pre_g_value=pre_score.g_value,
-                zero_width_count=removed_chars
+                unicode_anomaly_score=anomaly_score,
+                zero_width_count=removed_chars,
+                token_count=token_count,
+                perplexity=pre_score.perplexity or 0.0,
             )
-            attack_mode = auto_res["attack_mode"]
-            auto_rationale = auto_res["rationale"]
+            attack_mode = attack_plan.attack_mode
+            layers = attack_plan.layers
+            auto_rationale = attack_plan.rationale
             auto_selected = True
-            step_logs.append(f"⚡ Auto-Selected Attack Mode '{attack_mode}': {auto_rationale}")
+            step_logs.append(
+                f"⚡ Auto-Selected '{attack_mode}' ({attack_plan.estimated_time}): {auto_rationale}"
+            )
         else:
             attack_mode = req_mode
+            layers = MANUAL_LAYER_MAP.get(attack_mode, ["paraphrase"])
 
         current_text = sanitized_text
-
-        # Step 3 & 4 — ATTACK EXECUTION
-        if attack_mode in ["combined", "paraphrase"]:
-            paraphrased = paraphraser.paraphrase(
-                text=current_text,
-                enable_thinking=request.enable_thinking
-            )
-            current_text = paraphrased.strip()
-            s3_desc = "Gemma 4 E2B rewritten token sequence under fresh probability distributions."
-            step_logs.append("Step 3 (Attack): Gemma 4 E2B paraphrased token sequence successfully.")
-
-        elif attack_mode == "homoglyph":
-            current_text = self.homoglyph_engine.transform(current_text, rate=request.substitution_rate or 0.25)
-            s3_desc = "Replaced ASCII characters with Cyrillic lookalike characters."
-            step_logs.append("Step 3 (Homoglyph): Replaced ASCII characters with Cyrillic lookalikes.")
-
-        elif attack_mode == "shuffle":
-            current_text = self.shuffle_engine.transform(current_text)
-            s3_desc = "Shuffled sentence order to break 4-gram context boundary hashes."
-            step_logs.append("Step 3 (Sentence Shuffle): Reordered sentence structure.")
-        else:
-            s3_desc = "Attack pass skipped."
-
-        intermediate_steps.append(StepResult(
-            step_number=3,
-            step_name=f"Primary Attack Pass ({attack_mode})",
-            text_after_step=current_text,
-            g_value=None,
-            description=s3_desc
-        ))
-
-        # Step 4 — PERTURB (Secondary Pass)
-        if attack_mode in ["combined", "perturb"]:
-            current_text = self.perturb_engine.perturb(
-                text=current_text,
-                rate=request.substitution_rate
-            )
-            s4_desc = f"Swapped target words with natural synonyms (rate={request.substitution_rate})."
-            step_logs.append(f"Step 4 (Perturb): {s4_desc}")
-        else:
-            s4_desc = "Perturbation pass skipped."
-
-        intermediate_steps.append(StepResult(
-            step_number=4,
-            step_name="Secondary Perturbation",
-            text_after_step=current_text,
-            g_value=None,
-            description=s4_desc
-        ))
+        current_text = self._execute_layers(
+            layers=layers,
+            current_text=current_text,
+            request=request,
+            step_logs=step_logs,
+            intermediate_steps=intermediate_steps,
+            attack_mode=attack_mode,
+        )
 
         clean_text = current_text.strip()
 
         # Step 5 — DETECT (after)
-        post_detect_dict = detector.detect(clean_text, is_post_attack=True)
+        post_detect_dict = detector.detect(clean_text)
         post_score = DetectionScore(**post_detect_dict)
 
         post_status = "WATERMARKED" if post_score.is_watermarked else "CLEAN"
-        s5_desc = f"Scanned final output n-grams → Post G-Value = {post_score.g_value:.4f} ({post_status})"
+        post_ppl = ""
+        if post_score.perplexity is not None and post_score.perplexity > 0:
+            post_ppl = f", Perplexity={post_score.perplexity:.1f}"
+        s5_desc = (
+            f"Scanned final output → Post G-Value={post_score.g_value:.4f} "
+            f"({post_status}{post_ppl})"
+        )
         step_logs.append(f"Step 5 (Detect Post): {s5_desc}")
 
         intermediate_steps.append(StepResult(
@@ -153,13 +222,11 @@ class AttackPipeline:
             step_name="Post-Attack Verification",
             text_after_step=clean_text,
             g_value=post_score.g_value,
-            description=s5_desc
+            description=s5_desc,
         ))
 
-        # Calculate Word-Level Diff HTML
         diff_html = generate_word_diff_html(raw_text, clean_text)
 
-        # Calculate Watermark Reduction Percentage
         pre_g = pre_score.g_value
         post_g = post_score.g_value
         if pre_g > 0:
@@ -169,8 +236,9 @@ class AttackPipeline:
 
         is_clean = not post_score.is_watermarked
 
-        # Generate prominent user verdict title
-        if is_clean:
+        if attack_mode == "none":
+            verdict_title = "🟢 TEXT APPEARS CLEAN — NO ATTACK APPLIED"
+        elif is_clean:
             verdict_title = f"🟢 WATERMARK SUCCESSFULLY REMOVED (-{reduction_pct:.1f}% Signal Drop)"
         elif reduction_pct > 15.0:
             verdict_title = f"🟡 WATERMARK SIGNAL REDUCED BY {reduction_pct:.1f}% (Partial Removal)"
@@ -194,5 +262,5 @@ class AttackPipeline:
             attack_used=attack_mode,
             auto_selected=auto_selected,
             auto_rationale=auto_rationale,
-            processing_time_ms=elapsed_ms
+            processing_time_ms=elapsed_ms,
         )

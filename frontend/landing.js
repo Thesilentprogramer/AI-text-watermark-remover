@@ -152,4 +152,296 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     });
+
+    // ==========================================
+    // METHOD ARTIFACTS (animated demos)
+    // ==========================================
+    const ARTIFACT_DEMOS = [
+        {
+            title: "Auto Selector",
+            description: "Reads G-value, token count, perplexity, and unicode anomalies to pick the optimal attack automatically.",
+            tag: "WATERMARK REMOVAL",
+            agentName: "Confidence Selector Agent",
+            statusLabel: "Analyzing",
+            userMessage: "Analyze this Gemini article about Harry Kane (442 tokens).",
+            steps: ["Scan G-value", "Count tokens", "Check perplexity", "Select mode"],
+            outcomes: [
+                "Scanning n-gram green-list alignment… G-value = 0.50.",
+                "Tokenizing with GPT-2… 442 tokens detected.",
+                "GPT-2 perplexity = 28.4 → likely AI.",
+                "Decision: paraphrase mode — long text, no SynthID signal but AI flagged."
+            ],
+            metaChips: ["G: 0.50", "PPL: 28", "Mode: paraphrase"],
+            infoBoxes: {
+                left: { title: "METRICS", lines: ["G-Value: 0.50", "Tokens: 442", "Perplexity: 28"], footer: "AI flagged" },
+                right: { title: "DECISION", lines: ["Mode: paraphrase", "Layers: 1", "Est: 10–20s"], footer: "Ready" }
+            }
+        },
+        {
+            title: "Combined Pipeline",
+            description: "Full layered attack — paraphrase, synonym perturbation, and entropy for maximum signal destruction.",
+            tag: "WATERMARK REMOVAL",
+            agentName: "Combined Attack Agent",
+            statusLabel: "Processing",
+            userMessage: "Remove SynthID from this watermarked passage.",
+            steps: ["Sanitize", "Paraphrase", "Perturb", "Entropy"],
+            outcomes: [
+                "Stripped 0 hidden unicode characters.",
+                "Gemma 4 E2B rewrote token sequence under fresh distributions.",
+                "Synonym perturbation applied (rate=0.15).",
+                "G dropped 0.72 → 0.49. Signal destroyed."
+            ],
+            metaChips: ["G: 0.72→0.49", "Drop: 32%", "Status: CLEAN"]
+        },
+        {
+            title: "Gemma 4 Paraphrase",
+            description: "Complete token sequence regeneration via Gemma 4 E2B — destroys n-gram hash patterns.",
+            tag: "WATERMARK REMOVAL",
+            agentName: "Paraphrase Agent",
+            statusLabel: "Generating",
+            userMessage: "Rewrite this token sequence completely.",
+            steps: ["Load prompt", "Generate", "Strip thinking", "Output"],
+            outcomes: [
+                "Building chat template with system + user roles…",
+                "Sampling with temperature=1.0, top_p=0.95…",
+                "Stripping <thought> reasoning tokens via parse_response().",
+                "Tokens regenerated. N-gram context hashes reset."
+            ],
+            metaChips: ["Model: Gemma 4 E2B", "Thinking: on", "Tokens: new"]
+        },
+        {
+            title: "Back-Translation",
+            description: "EN→DE→EN via Helsinki-NLP MarianMT — fast n-gram boundary reset for short text.",
+            tag: "WATERMARK REMOVAL",
+            agentName: "Back-Translate Agent",
+            statusLabel: "Translating",
+            userMessage: "Fast-clean this short AI paragraph.",
+            steps: ["EN → DE", "DE → EN", "Verify"],
+            outcomes: [
+                "Forwarding to Helsinki-NLP opus-mt-en-de…",
+                "Back-translating via opus-mt-de-en…",
+                "N-gram boundaries reset via MarianMT. Meaning preserved."
+            ],
+            metaChips: ["Pivot: German", "Chunks: 1", "Speed: fast"]
+        },
+        {
+            title: "Perplexity Detection",
+            description: "GPT-2 perplexity scoring flags AI text even when SynthID G-value is baseline.",
+            tag: "DETECTION",
+            agentName: "Perplexity Scanner",
+            statusLabel: "Scanning",
+            userMessage: "Is this AI-generated? No SynthID signal detected.",
+            steps: ["Tokenize", "GPT-2 forward", "Compute PPL", "Classify"],
+            outcomes: [
+                "Encoding text with GPT-2 tokenizer…",
+                "Running forward pass, computing cross-entropy loss…",
+                "Perplexity = exp(loss) = 31.2",
+                "Classification: likely AI. Flagged for attack despite G=0.50."
+            ],
+            metaChips: ["PPL: 31.2", "Label: likely AI", "G: 0.50"]
+        },
+        {
+            title: "Sanitize + Perturb",
+            description: "Strips zero-width unicode tricks then applies synonym substitution.",
+            tag: "WATERMARK REMOVAL",
+            agentName: "Sanitize Agent",
+            statusLabel: "Cleaning",
+            userMessage: "Text with hidden zero-width characters injected at character level.",
+            steps: ["Strip unicode", "Synonym swap", "Verify"],
+            outcomes: [
+                "Removed 3 hidden chars (U+200B, U+FEFF).",
+                "Applied synonym perturbation to break residual patterns.",
+                "Character-level + statistical cleanup complete."
+            ],
+            metaChips: ["Removed: 3 chars", "Mode: sanitize_perturb", "Rate: 0.15"]
+        },
+        {
+            title: "Homoglyph Attack",
+            description: "Replaces ASCII with Cyrillic lookalikes — breaks tokenizer indexing, stays human-readable.",
+            tag: "WATERMARK REMOVAL",
+            agentName: "Homoglyph Agent",
+            statusLabel: "Transforming",
+            userMessage: "Break tokenizer indexing without changing visual appearance.",
+            steps: ["Map ASCII", "Replace Cyrillic", "Re-tokenize"],
+            outcomes: [
+                "Mapping a→а, e→е, o→о, c→с…",
+                "Applied homoglyph substitution (rate=0.25).",
+                "SуnthID → different token IDs. Hash patterns broken."
+            ],
+            metaChips: ["Rate: 0.25", "Script: Cyrillic", "Visual: identical"]
+        },
+        {
+            title: "SynthID G-Value Detection",
+            description: "Real SynthID green-list alignment via vendored synthid-text logits processor.",
+            tag: "DETECTION",
+            agentName: "G-Value Scanner",
+            statusLabel: "Detecting",
+            userMessage: "Measure green-list alignment for this text sample.",
+            steps: ["Tokenize", "4-gram hash", "G-value", "Verdict"],
+            outcomes: [
+                "GPT-2 tokenizer: 128 tokens encoded.",
+                "Computing 4-gram context green-list hits…",
+                "Mean G-value = 0.71 (threshold ≥ 0.55).",
+                "Pre: 0.71 WATERMARKED → Post-attack: 0.49 CLEAN."
+            ],
+            metaChips: ["Pre: 0.71", "Post: 0.49", "Verdict: CLEAN"],
+            infoBoxes: {
+                left: { title: "PRE-ATTACK", lines: ["G-Value: 0.71", "Status: WATERMARKED", "Confidence: high"], footer: "Attack needed" },
+                right: { title: "POST-ATTACK", lines: ["G-Value: 0.49", "Status: CLEAN", "Drop: 31%"], footer: "Success" }
+            }
+        }
+    ];
+
+    const artifactTimers = new Map();
+    const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    function buildStepProgress(steps, artifactId) {
+        const labels = steps.map((label, i) =>
+            `<span class="step-progress__step" data-step="${i}">${i + 1}. ${label}</span>`
+        ).join("");
+        return `
+            <div class="step-progress" data-artifact="${artifactId}">
+                <div class="step-progress__track">
+                    <div class="step-progress__bar"></div>
+                </div>
+                <div class="step-progress__labels">${labels}</div>
+            </div>`;
+    }
+
+    function buildInfoBoxes(boxes) {
+        if (!boxes) return "";
+        const box = (side, data) => `
+            <div class="info-box">
+                <div class="info-box__title">${data.title}</div>
+                ${data.lines.map(l => `<div class="info-box__line">${l}</div>`).join("")}
+                <div class="info-box__footer">${data.footer}</div>
+            </div>`;
+        return `<div class="info-boxes">${box("left", boxes.left)}${box("right", boxes.right)}</div>`;
+    }
+
+    function buildArtifactCard(demo, idx) {
+        const id = `artifact-${idx}`;
+        const stepBlock = demo.infoBoxes
+            ? buildInfoBoxes(demo.infoBoxes)
+            : buildStepProgress(demo.steps, id);
+
+        const chips = demo.metaChips.map(c => `<span class="artifact-chip">${c}</span>`).join("");
+
+        return `
+            <article class="method-artifact neo-card" id="${id}" data-artifact-idx="${idx}">
+                <h3 class="artifact-title">${demo.title}</h3>
+                <p class="artifact-desc">${demo.description}</p>
+                <div class="artifact-demo">
+                    <div class="artifact-header">
+                        <div class="artifact-header__left">
+                            <span class="artifact-tag">${demo.tag}</span>
+                            <span class="artifact-agent-name">${demo.agentName}</span>
+                        </div>
+                        <span class="status-pill"><span class="status-dot"></span>${demo.statusLabel}</span>
+                    </div>
+                    <div class="chat-bubble user artifact-user">
+                        <div class="avatar">IN</div>
+                        <div class="bubble-body">${demo.userMessage}</div>
+                    </div>
+                    ${stepBlock}
+                    <div class="chat-bubble agent artifact-agent">
+                        <div class="avatar out">AI</div>
+                        <div class="bubble-body">
+                            <div class="artifact-outcome artifact-outcome--animate">${demo.outcomes[0]}</div>
+                        </div>
+                    </div>
+                    <div class="artifact-meta">${chips}</div>
+                </div>
+            </article>`;
+    }
+
+    function setArtifactStep(cardEl, stepIdx) {
+        const idx = parseInt(cardEl.dataset.artifactIdx, 10);
+        const demo = ARTIFACT_DEMOS[idx];
+        if (!demo) return;
+
+        const maxStep = demo.outcomes.length - 1;
+        const active = Math.min(stepIdx, maxStep);
+
+        const outcomeEl = cardEl.querySelector(".artifact-outcome");
+        if (outcomeEl) {
+            outcomeEl.classList.remove("artifact-outcome--animate");
+            void outcomeEl.offsetWidth;
+            outcomeEl.textContent = demo.outcomes[active];
+            outcomeEl.classList.add("artifact-outcome--animate");
+        }
+
+        const progress = cardEl.querySelector(".step-progress");
+        if (progress) {
+            const steps = progress.querySelectorAll(".step-progress__step");
+            const bar = progress.querySelector(".step-progress__bar");
+            const pct = ((active + 1) / demo.steps.length) * 100;
+            if (bar) bar.style.width = `${pct}%`;
+            steps.forEach((s, i) => {
+                s.classList.toggle("step-progress__step--active", i === active);
+                s.classList.toggle("step-progress__step--done", i < active);
+            });
+        }
+
+        cardEl.dataset.currentStep = String(active);
+    }
+
+    function startArtifactAnimation(cardEl) {
+        if (prefersReducedMotion || artifactTimers.has(cardEl)) return;
+
+        const idx = parseInt(cardEl.dataset.artifactIdx, 10);
+        const demo = ARTIFACT_DEMOS[idx];
+        if (!demo) return;
+
+        let step = 0;
+        setArtifactStep(cardEl, step);
+
+        const timer = setInterval(() => {
+            step = (step + 1) % demo.outcomes.length;
+            setArtifactStep(cardEl, step);
+        }, 1800);
+
+        artifactTimers.set(cardEl, timer);
+        cardEl.classList.add("artifact--playing");
+    }
+
+    function stopArtifactAnimation(cardEl) {
+        const timer = artifactTimers.get(cardEl);
+        if (timer) {
+            clearInterval(timer);
+            artifactTimers.delete(cardEl);
+        }
+        cardEl.classList.remove("artifact--playing");
+    }
+
+    function renderArtifactGrid() {
+        const grid = document.getElementById("artifactGrid");
+        if (!grid) return;
+
+        grid.innerHTML = ARTIFACT_DEMOS.map((demo, i) => buildArtifactCard(demo, i)).join("");
+
+        if (prefersReducedMotion) {
+            grid.querySelectorAll(".method-artifact").forEach(card => {
+                setArtifactStep(card, ARTIFACT_DEMOS[parseInt(card.dataset.artifactIdx, 10)].outcomes.length - 1);
+            });
+            return;
+        }
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        startArtifactAnimation(entry.target);
+                    } else {
+                        stopArtifactAnimation(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.35 }
+        );
+
+        grid.querySelectorAll(".method-artifact").forEach(card => observer.observe(card));
+    }
+
+    renderArtifactGrid();
 });

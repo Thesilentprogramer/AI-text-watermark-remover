@@ -8,10 +8,11 @@ The SynthID Watermark Remover is an **ML-powered adversarial pipeline** designed
 
 When a user submits text (e.g. AI-generated article or essay), the system runs the following 4-step pipeline:
 
-1. **Pre-Attack Watermark Detection** — Calculates the baseline statistical **G-value** of the input text using `synthid-text` and a GPT-2 tokenizer. A G-value >0.55 indicates high confidence of a SynthID watermark.
-2. **Gemma 4 Paraphrasing Attack** — Passes the text to `google/gemma-4-E2B-it` via `AutoModelForImageTextToText`. With thinking mode enabled (`enable_thinking=True`), the model completely regenerates the token sequence under new probability distributions, erasing the original n-gram hash patterns. Reasoning tokens are automatically stripped using `processor.parse_response()`.
-3. **Secondary Token Perturbation Attack** — Applies optional secondary transformations (synonym swapping and zero-width/filler token insertion) to disrupt any residual structural patterns.
-4. **Post-Attack Verification & Quantification** — Re-evaluates the transformed text with the `WatermarkDetector` to confirm the G-value has dropped to baseline noise level (~0.49–0.51) and outputs the percentage reduction alongside a clean/watermarked verdict.
+1. **Pre-Attack Watermark Detection** — Calculates baseline **G-value** using vendored `synthid-text` (`SynthIDLogitsProcessor`) with a GPT-2 tokenizer. G-value > 0.55 indicates watermarked text. GPT-2 **perplexity scoring** is enabled by default (`ENABLE_PERPLEXITY=true`); perplexity < 60 flags likely AI text even when SynthID G-value is normal.
+2. **Confidence-Based Attack Selection** — When `attack_mode=auto`, the selector picks backtranslate, paraphrase, perturb, combined, or none based on G-value, token count, and unicode anomaly score.
+3. **Gemma 4 Paraphrasing Attack** — Custom rewrite of upstream `ParaphrasingAttack` for `google/gemma-4-E2B-it`. Falls back to Google API or heuristic synonym rewriting.
+4. **Back-Translation & Entropy Layers** — MarianMT EN→DE→EN for short text; sentence variation + synonym swap for combined mode.
+5. **Post-Attack Verification** — Re-evaluates with real `WatermarkDetector.compute_score()` (no simulated score capping).
 
 The entire process executes in ~5-15 seconds on GPU and produces a fully sanitized, un-watermarked text with quantitative verification.
 
@@ -24,7 +25,7 @@ The entire process executes in ~5-15 seconds on GPU and produces a fully sanitiz
 | **Frontend** | Vanilla HTML5, Claymorphism CSS (soft 3D depth, dual drop/inset shadows), JavaScript (ES6+ Fetch API) |
 | **Backend** | FastAPI, Python 3.11, PyTorch 2.2+, Uvicorn |
 | **ML / LLM** | `google/gemma-4-E2B-it` via Hugging Face `AutoModelForImageTextToText` & `AutoProcessor` (`bfloat16`, `device_map="auto"`) |
-| **Watermark Engine** | `synthid-text`, GPT-2 Tokenizer (`transformers`), `WatermarkDetector` |
+| **Watermark Engine** | Vendored `synthid-text`, `ExtendedDetector`, upstream `TokenPerturbationAttack` |
 | **UI Theme** | **Claymorphism** (Inflated 3D rounded cards, soft dual inner & outer shadows, pastel/dark clay palettes, tactile pill controls) |
 | **Infrastructure** | RunPod / Single GPU (T4 or A10G VRAM >= 12GB), Docker |
 

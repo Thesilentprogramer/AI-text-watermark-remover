@@ -29,3 +29,16 @@ def test_remove_watermark_endpoint():
     assert "pre_attack" in data
     assert "post_attack" in data
     assert "watermark_reduction_pct" in data
+    assert "perplexity" in data["pre_attack"]
+
+
+def test_auto_mode_endpoint():
+    payload = {
+        "text": "Google DeepMind SynthID embeds statistical watermarks into generated text.",
+        "attack_mode": "auto",
+    }
+    response = client.post("/remove-watermark", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["auto_selected"] is True
+    assert data["auto_rationale"]

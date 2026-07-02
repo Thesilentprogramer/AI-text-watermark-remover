@@ -39,7 +39,7 @@
         <header class="neo-header">
             <div class="neo-badge">Gemma 4 E2B Engine Live</div>
             <h1>Break AI Text Watermarks.</h1>
-            <p>An adversarial ML pipeline utilizing Gemma 4 E2B, Homoglyphs, and Token Perturbation to destroy SynthID logit biases.</p>
+            <p>An adversarial ML pipeline with confidence-based attack selection — Gemma 4 E2B, perplexity detection, homoglyphs, and token perturbation.</p>
             <a href="/app" class="neo-btn primary huge-btn">Try the Live Tool Now</a>
         </header>
 
@@ -91,6 +91,16 @@
                     <p id="slideMathDesc" class="math-desc">SynthID biases logit probabilities by hashing n-gram context tokens ($k=4$). Paraphrasing regenerates the token sequence from scratch, resetting context hashes and reducing mean G-values from 0.72 to 0.49.</p>
                 </div>
             </div>
+        </section>
+
+        <!-- Method Artifacts (animated demos) -->
+        <section class="neo-section method-artifacts-section">
+            <div class="section-title">
+                <h2>Method Artifacts</h2>
+                <span class="neo-badge">Live Demos</span>
+            </div>
+            <p class="section-lead">How each attack method works — animated pipeline previews.</p>
+            <div id="artifactGrid" class="artifact-grid"></div>
         </section>
 
         <!-- AI Provider Benchmarks -->

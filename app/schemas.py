@@ -25,6 +25,9 @@ class DetectionScore(BaseModel):
     is_watermarked: bool
     confidence: str
     sample_tokens: int
+    perplexity: Optional[float] = None
+    perplexity_label: Optional[str] = None
+    verdict: Optional[str] = None
 
 
 class StepResult(BaseModel):

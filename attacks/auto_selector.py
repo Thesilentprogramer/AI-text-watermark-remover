@@ -1,40 +1,138 @@
 """
-Auto-Adaptive Confidence-Based Attack Selector
-Analyzes input text metrics (token length, zero-width unicode anomaly count, pre-attack G-value score)
-and automatically selects the optimal adversarial attack strategy.
+Confidence-Based Attack Selector
+Automatically selects the optimal adversarial attack based on input text characteristics.
 """
 
-from typing import Dict, Any
+from dataclasses import dataclass
+from typing import List
 
 
-def evaluate_optimal_attack(text: str, pre_g_value: float, zero_width_count: int) -> Dict[str, Any]:
+@dataclass
+class AttackPlan:
+    attack_mode: str
+    layers: List[str]
+    rationale: str
+    estimated_time: str
+
+
+def select_attack(
+    pre_g_value: float,
+    unicode_anomaly_score: float,
+    zero_width_count: int,
+    token_count: int,
+    perplexity: float = 0.0,
+) -> AttackPlan:
     """
-    Evaluates optimal attack mode based on text metrics.
+    Select attack mode based on pre-detection metrics.
 
-    Decision Rules:
-    1. Zero-width unicode anomalies detected -> 'combined' (Sanitize + Combined Pass)
-    2. Watermark signal detected (G >= 0.55) -> 'combined' (Gemma 4 Paraphrase + Secondary Perturbation)
-    3. Low watermark signal (G < 0.55) -> 'paraphrase' (Fast structural rephrase)
+    Rules (priority order):
+    1. G > 0.75 → combined (all layers)
+    2. Unicode anomaly → sanitize + perturb
+    3. G >= 0.55 and tokens < 200 → backtranslate
+    4. G >= 0.55 and tokens >= 200 → paraphrase
+    5. Low perplexity (< 60) with normal G → paraphrase/backtranslate (likely AI, no SynthID)
+    6. Clean input → none
     """
-    words = text.split()
-    word_count = len(words)
+    if pre_g_value > 0.75:
+        return AttackPlan(
+            attack_mode="combined",
+            layers=["paraphrase", "perturb", "entropy"],
+            rationale=(
+                f"Very high G-value ({pre_g_value:.2f} > 0.75). "
+                "Running combined mode: paraphrase + perturb + entropy for total signal destruction."
+            ),
+            estimated_time="15–25 seconds",
+        )
 
-    # Rule 1: Zero-Width Characters Detected
-    if zero_width_count > 0:
-        return {
-            "attack_mode": "combined",
-            "rationale": f"Zero-width unicode anomalies ({zero_width_count} chars) detected. Applied Unicode Sanitizer followed by Combined Pass."
-        }
+    if zero_width_count > 0 or unicode_anomaly_score > 0.01:
+        return AttackPlan(
+            attack_mode="sanitize_perturb",
+            layers=["perturb"],
+            rationale=(
+                f"Unicode anomaly detected ({zero_width_count} hidden chars, "
+                f"score {unicode_anomaly_score:.4f}). Sanitize then apply synonym perturbation."
+            ),
+            estimated_time="2–5 seconds",
+        )
 
-    # Rule 2: Watermark Signal Detected (G >= 0.55)
-    if pre_g_value >= 0.55:
-        return {
-            "attack_mode": "combined",
-            "rationale": f"Watermark signal detected (G-Value {pre_g_value:.2f} >= 0.55). Selected Combined Mode (Paraphrase + Secondary Perturbation) for total signal destruction."
-        }
+    if pre_g_value >= 0.55 and token_count < 200:
+        return AttackPlan(
+            attack_mode="backtranslate",
+            layers=["backtranslate"],
+            rationale=(
+                f"Moderate watermark signal (G={pre_g_value:.2f}) on short text "
+                f"({token_count} tokens < 200). Back-translation is fast and sufficient."
+            ),
+            estimated_time="5–10 seconds",
+        )
 
-    # Rule 3: Clean/Unwatermarked Input
+    if pre_g_value >= 0.55 and token_count >= 200:
+        return AttackPlan(
+            attack_mode="paraphrase",
+            layers=["paraphrase"],
+            rationale=(
+                f"Moderate watermark signal (G={pre_g_value:.2f}) on long text "
+                f"({token_count} tokens >= 200). Full Gemma 4 paraphrase for thorough removal."
+            ),
+            estimated_time="10–20 seconds",
+        )
+
+    if pre_g_value < 0.55 and perplexity > 0 and perplexity < 60:
+        if token_count >= 200:
+            return AttackPlan(
+                attack_mode="paraphrase",
+                layers=["paraphrase"],
+                rationale=(
+                    f"Low perplexity ({perplexity:.1f}) suggests AI-generated text with no SynthID signal "
+                    f"(G={pre_g_value:.2f}). Paraphrasing long text ({token_count} tokens)."
+                ),
+                estimated_time="10–20 seconds",
+            )
+        return AttackPlan(
+            attack_mode="backtranslate",
+            layers=["backtranslate"],
+            rationale=(
+                f"Low perplexity ({perplexity:.1f}) suggests AI-generated text with no SynthID signal "
+                f"(G={pre_g_value:.2f}). Back-translating short text ({token_count} tokens)."
+            ),
+            estimated_time="5–10 seconds",
+        )
+
+    return AttackPlan(
+        attack_mode="none",
+        layers=[],
+        rationale=(
+            f"G-value ({pre_g_value:.2f}) and unicode profile are within normal range. "
+            "No attack required."
+        ),
+        estimated_time="0 seconds",
+    )
+
+
+def evaluate_optimal_attack(
+    text: str,
+    pre_g_value: float,
+    zero_width_count: int,
+    token_count: int = None,
+    unicode_anomaly_score: float = None,
+    perplexity: float = 0.0,
+) -> dict:
+    """Backward-compatible wrapper returning dict for pipeline integration."""
+    if token_count is None:
+        token_count = len(text.split())
+    if unicode_anomaly_score is None:
+        unicode_anomaly_score = zero_width_count / max(len(text), 1)
+
+    plan = select_attack(
+        pre_g_value=pre_g_value,
+        unicode_anomaly_score=unicode_anomaly_score,
+        zero_width_count=zero_width_count,
+        token_count=token_count,
+        perplexity=perplexity,
+    )
     return {
-        "attack_mode": "combined",
-        "rationale": f"Analyzed {word_count} words. Applied Combined Mode for baseline security optimization."
+        "attack_mode": plan.attack_mode,
+        "layers": plan.layers,
+        "rationale": plan.rationale,
+        "estimated_time": plan.estimated_time,
     }

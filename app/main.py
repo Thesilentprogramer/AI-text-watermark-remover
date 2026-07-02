@@ -70,7 +70,7 @@ async def health_check():
         status="ok",
         model_loaded=paraphraser.loaded if paraphraser else False,
         device=paraphraser.device if paraphraser else "unknown",
-        engine="Gemma 4 E2B + WatermarkDetector"
+        engine="ExtendedDetector (synthid-text) + Gemma 4 E2B"
     )
 
 
