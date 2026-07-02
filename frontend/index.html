@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SynthID Watermark Remover — Claymorphism Edition</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="clay-background-glow"></div>
+
+    <div class="clay-container">
+        <!-- Header Section -->
+        <header class="clay-card header-card">
+            <div class="header-badge">
+                <span class="pulse-dot"></span>
+                <span>Gemma 4 E2B Engine</span>
+            </div>
+            <h1>SynthID Watermark Remover</h1>
+            <p class="subtitle">Adversarial LLM Paraphrasing & Token Perturbation Pipeline</p>
+        </header>
+
+        <!-- Pipeline Workflow Diagram -->
+        <section class="clay-card pipeline-card">
+            <div class="pipeline-steps">
+                <div class="step-chip">
+                    <span class="step-num">1</span>
+                    <span class="step-name">Sanitize</span>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-chip">
+                    <span class="step-num">2</span>
+                    <span class="step-name">Detect (Pre)</span>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-chip highlight">
+                    <span class="step-num">3</span>
+                    <span class="step-name">Paraphrase</span>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-chip">
+                    <span class="step-num">4</span>
+                    <span class="step-name">Perturb</span>
+                </div>
+                <div class="step-arrow">→</div>
+                <div class="step-chip">
+                    <span class="step-num">5</span>
+                    <span class="step-name">Detect (Post)</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- Main Workspace: Input & Controls -->
+        <main class="clay-grid">
+            <!-- Left Card: Input Text -->
+            <div class="clay-card workspace-card">
+                <div class="card-header">
+                    <h2>Input Watermarked Text</h2>
+                    <button id="sampleBtn" class="clay-btn small-btn">Load Sample</button>
+                </div>
+                <textarea id="inputText" placeholder="Paste your AI-generated or watermarked text here..." rows="8"></textarea>
+                
+                <div class="control-row">
+                    <div class="control-group">
+                        <label for="attackMode">Attack Mode</label>
+                        <select id="attackMode" class="clay-select">
+                            <option value="combined" selected>Combined (Paraphrase + Perturb)</option>
+                            <option value="paraphrase">Paraphrase Only (Gemma 4)</option>
+                            <option value="perturb">Perturb Only (Synonym Swap)</option>
+                            <option value="sanitize">Sanitize Only (Unicode Strip)</option>
+                        </select>
+                    </div>
+
+                    <div class="control-group checkbox-group">
+                        <label class="clay-checkbox-label">
+                            <input type="checkbox" id="enableThinking" checked>
+                            <span class="clay-checkbox"></span>
+                            <span>Thinking Mode</span>
+                        </label>
+                    </div>
+                </div>
+
+                <button id="runBtn" class="clay-btn primary-btn">
+                    <span id="btnText">Remove Watermark</span>
+                    <div id="btnSpinner" class="spinner hidden"></div>
+                </button>
+            </div>
+
+            <!-- Right Card: Results & Verification -->
+            <div class="clay-card workspace-card">
+                <div class="card-header">
+                    <h2>Verification & Clean Output</h2>
+                    <button id="copyBtn" class="clay-btn small-btn" disabled>Copy Clean Text</button>
+                </div>
+
+                <!-- Score Gauges -->
+                <div id="scoreSection" class="score-container">
+                    <div class="score-box pre-box">
+                        <span class="score-label">Pre-Attack G-Value</span>
+                        <div class="score-val-row">
+                            <span id="preGVal" class="score-val">0.00</span>
+                            <span id="preBadge" class="status-badge gray">Waiting</span>
+                        </div>
+                        <span class="score-sub">Threshold: ≥ 0.55</span>
+                    </div>
+
+                    <div class="score-divider">➔</div>
+
+                    <div class="score-box post-box">
+                        <span class="score-label">Post-Attack G-Value</span>
+                        <div class="score-val-row">
+                            <span id="postGVal" class="score-val">0.00</span>
+                            <span id="postBadge" class="status-badge gray">Waiting</span>
+                        </div>
+                        <span class="score-sub">Target: ~0.49 - 0.51</span>
+                    </div>
+                </div>
+
+                <!-- Reduction Progress Bar -->
+                <div class="reduction-bar-container">
+                    <div class="reduction-label-row">
+                        <span>Watermark Signal Reduction</span>
+                        <span id="reductionPct">0%</span>
+                    </div>
+                    <div class="clay-progress-track">
+                        <div id="progressBar" class="clay-progress-fill" style="width: 0%;"></div>
+                    </div>
+                </div>
+
+                <!-- Cleaned Output Text -->
+                <textarea id="outputText" placeholder="Clean, un-watermarked output text will appear here..." readonly rows="8"></textarea>
+
+                <!-- Status Footer -->
+                <div class="status-footer">
+                    <span id="timingBadge">Processing Time: 0 ms</span>
+                    <span id="sanitizedBadge">Unicode Removed: 0 chars</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -49,6 +49,43 @@ The entire process executes in ~5-15 seconds on GPU and produces a fully sanitiz
 
 ---
 
+User pastes text
+       │
+       ▼
+Step 1 — SANITIZE
+Remove hidden invisible unicode characters
+(\u200B, \u200D etc.) that ChatGPT sometimes
+injects at the character level.
+Runs locally, instant, no API needed.
+       │
+       ▼
+Step 2 — DETECT (before)
+WatermarkDetector scans the text and
+computes the G-value.
+e.g. G = 0.71 → "Watermarked: Yes"
+Runs locally using GPT-2 tokenizer, no API needed.
+       │
+       ▼
+Step 3 — ATTACK (the main thing)
+Send text to an LLM API (Google AI Studio / HF API).
+The model rewrites the entire text from scratch.
+New token sequence = green-list pattern gone.
+       │
+       ▼
+Step 4 — PERTURB (secondary pass)
+Swap some words with synonyms.
+Vary sentence lengths slightly.
+Adds extra noise on top of the paraphrase.
+Runs locally, no API needed.
+       │
+       ▼
+Step 5 — DETECT (after)
+Run WatermarkDetector again on the clean text.
+e.g. G = 0.49 → "Watermarked: No"
+       │
+       ▼
+Show user: before score, after score, clean text
+
 ## Previous Changes
 
 ### Core Pipeline & Detection Setup
