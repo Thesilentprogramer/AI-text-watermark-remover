@@ -17,13 +17,102 @@
         <header class="clay-card header-card">
             <div class="header-badge">
                 <span class="pulse-dot"></span>
-                <span>Gemma 4 E2B Engine</span>
+                <span>Gemma 4 E2B Engine • Live</span>
             </div>
             <h1>SynthID Watermark Remover</h1>
             <p class="subtitle">Adversarial LLM Paraphrasing, Homoglyph & Token Perturbation Pipeline</p>
         </header>
 
-        <!-- Pipeline Workflow Diagram (Dynamic Step Highlighting) -->
+        <!-- Attack Modes Showcase Carousel (Reference Image Design Aesthetic) -->
+        <section class="clay-card carousel-card">
+            <div class="carousel-header-row">
+                <div>
+                    <span class="orange-tag">ATTACK STRATEGIES</span>
+                    <h2 id="carouselTitle">Mode 1: Combined Paraphrase + Perturb</h2>
+                </div>
+                <div class="carousel-nav-btns">
+                    <button id="prevSlideBtn" class="clay-btn small-btn">◄ Prev</button>
+                    <span id="slideIndicator" class="slide-indicator">1 / 6</span>
+                    <button id="nextSlideBtn" class="clay-btn small-btn">Next ►</button>
+                </div>
+            </div>
+
+            <!-- Carousel Slide Container -->
+            <div id="carouselSlide" class="carousel-slide-content">
+                <!-- Step Tracker Bar (Styled matching reference image) -->
+                <div class="step-tracker-bar">
+                    <span class="step-label orange-step">1. Sanitize</span>
+                    <span class="step-line active-line"></span>
+                    <span class="step-label orange-step">2. Pre-Detect</span>
+                    <span class="step-line active-line"></span>
+                    <span class="step-label orange-step">3. Paraphrase</span>
+                    <span class="step-line active-line"></span>
+                    <span class="step-label orange-step">4. Perturb</span>
+                </div>
+
+                <!-- Live Prompt Bubble & Output Box -->
+                <div class="chat-mock-container">
+                    <div class="chat-bubble user-bubble">
+                        <span class="avatar-tag">IN</span>
+                        <div class="bubble-text" id="slideInputText">Input: AI-generated text containing SynthID 4-gram green-list logit bias...</div>
+                    </div>
+
+                    <div class="chat-bubble agent-bubble">
+                        <span class="avatar-tag orange-avatar">OUT</span>
+                        <div class="bubble-content-box">
+                            <div class="bubble-status-row">
+                                <span class="orange-status-pill">● Active Processing</span>
+                                <span class="badge-tag">G-Value Reduction: ~31%</span>
+                            </div>
+                            <div class="bubble-main-text" id="slideOutputText">
+                                Output: Paraphrased text generated with Gemma 4 E2B under fresh probability distributions, completely resetting n-gram context hashes.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mathematical Proof Box -->
+                <div class="math-proof-box">
+                    <div class="math-title">Mathematical Formulation & Mechanics</div>
+                    <div class="math-formula" id="slideMathFormula">
+                        $$P'(x_i | x_{<i}) = P(x_i | x_{<i}) \times \left(1 + g_i - \sum g_j P(x_j)\right)$$
+                    </div>
+                    <p class="math-desc" id="slideMathDesc">
+                        SynthID biases logit probabilities by hashing n-gram context tokens ($k=4$). Paraphrasing regenerates the token sequence from scratch, resetting context hashes and reducing mean G-values from $0.72 \rightarrow 0.49$.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Provider Watermark Showcase -->
+        <section class="clay-card provider-card">
+            <div class="card-header">
+                <h2>AI Provider Watermark Benchmarks</h2>
+                <span class="subtitle">Comparing watermarking mechanics across major AI platforms</span>
+            </div>
+
+            <!-- Provider Selector Tabs -->
+            <div class="provider-tabs">
+                <button class="provider-tab active" data-provider="gemini">Google Gemini (SynthID)</button>
+                <button class="provider-tab" data-provider="chatgpt">OpenAI ChatGPT (GPT-4o)</button>
+                <button class="provider-tab" data-provider="anthropic">Anthropic Claude 3.5</button>
+                <button class="provider-tab" data-provider="llama">Meta Llama 3 / Open Source</button>
+            </div>
+
+            <div class="provider-info-box">
+                <div class="provider-meta-row">
+                    <span id="providerBadge" class="orange-tag">GOOGLE GEMINI</span>
+                    <span id="providerTech" class="badge-tag">SynthID N-gram Logit Biasing</span>
+                    <span id="providerGVal" class="status-badge red">G-Value: 0.72 (Watermarked)</span>
+                </div>
+                <p id="providerDesc" class="provider-desc-text">
+                    Google Gemini uses SynthID n-gram context logit biasing. Watermarks are embedded into token selection probabilities during model sampling and survive formatting or minor edits.
+                </p>
+                <button id="loadProviderSampleBtn" class="clay-btn small-btn primary-btn">Load Provider Sample into Workspace</button>
+            </div>
+        </section>
+
+        <!-- Dynamic Pipeline Step Bar -->
         <section class="clay-card pipeline-card">
             <div class="pipeline-steps">
                 <div id="stepChip1" class="step-chip">
@@ -94,11 +183,15 @@
                 </button>
             </div>
 
-            <!-- Right Card: Results & Verification -->
+            <!-- Right Card: Results & Inline Diff Visualizer -->
             <div class="clay-card workspace-card">
                 <div class="card-header">
                     <h2>Verification & Clean Output</h2>
-                    <button id="copyBtn" class="clay-btn small-btn" disabled>Copy Clean Text</button>
+                    <div class="view-toggle-group">
+                        <button id="viewCleanBtn" class="clay-btn small-btn active-view">Clean Text</button>
+                        <button id="viewDiffBtn" class="clay-btn small-btn">Inline Word Diff</button>
+                        <button id="copyBtn" class="clay-btn small-btn" disabled>Copy</button>
+                    </div>
                 </div>
 
                 <!-- Prominent Verdict Banner -->
@@ -140,8 +233,22 @@
                     </div>
                 </div>
 
-                <!-- Cleaned Output Text -->
+                <!-- Raw Text Area Output -->
                 <textarea id="outputText" placeholder="Clean, un-watermarked output text will appear here..." readonly rows="6"></textarea>
+
+                <!-- Inline Word-Level Diff Visualizer View -->
+                <div id="diffViewContainer" class="diff-view-box hidden">
+                    <div class="diff-header-bar">
+                        <span>Inline Word-Level Diff (Watermark Removal Changes)</span>
+                        <div class="diff-legend">
+                            <span class="legend-del">● Removed Watermarked Word</span>
+                            <span class="legend-add">● Clean Replacement Word</span>
+                        </div>
+                    </div>
+                    <div id="diffHtmlOutput" class="diff-content-area">
+                        Run watermark removal to highlight token transformations.
+                    </div>
+                </div>
 
                 <!-- Status Footer -->
                 <div class="status-footer">

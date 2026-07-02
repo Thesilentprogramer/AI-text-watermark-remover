@@ -37,6 +37,7 @@ class StepResult(BaseModel):
 
 class WatermarkResponse(BaseModel):
     clean_text: str
+    diff_html: str
     sanitized_char_count: int
     pre_attack: DetectionScore
     post_attack: DetectionScore

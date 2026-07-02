@@ -1,6 +1,7 @@
 """
 SynthID Attack Pipeline Orchestrator
 Executes & tracks text transformation across Step 1 (Sanitize) -> Step 2 (Detect Pre) -> Step 3 (Attack) -> Step 4 (Perturb) -> Step 5 (Detect Post)
+Includes Word-Level Diff Visualizer output.
 """
 
 import time
@@ -9,6 +10,7 @@ from attacks.sanitizer import sanitize_text
 from attacks.token_perturbation import TokenPerturbationAttack
 from attacks.homoglyph import HomoglyphAttack
 from attacks.sentence_shuffling import SentenceShufflingAttack
+from attacks.diff_engine import generate_word_diff_html
 from app.model_loader import get_paraphrase_engine, get_detector_engine
 from app.schemas import WatermarkRequest, WatermarkResponse, DetectionScore, StepResult
 
@@ -136,6 +138,9 @@ class AttackPipeline:
             description=s5_desc
         ))
 
+        # Calculate Word-Level Diff HTML
+        diff_html = generate_word_diff_html(raw_text, clean_text)
+
         # Calculate Watermark Reduction Percentage
         pre_g = pre_score.g_value
         post_g = post_score.g_value
@@ -159,6 +164,7 @@ class AttackPipeline:
 
         return WatermarkResponse(
             clean_text=clean_text,
+            diff_html=diff_html,
             sanitized_char_count=removed_chars,
             pre_attack=pre_score,
             post_attack=post_score,
