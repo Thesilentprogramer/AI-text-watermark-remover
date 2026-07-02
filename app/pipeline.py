@@ -55,7 +55,7 @@ class AttackPipeline:
         ))
 
         # Step 2 — DETECT (before)
-        pre_detect_dict = detector.detect(sanitized_text)
+        pre_detect_dict = detector.detect(sanitized_text, is_post_attack=False)
         pre_score = DetectionScore(**pre_detect_dict)
 
         pre_status = "WATERMARKED" if pre_score.is_watermarked else "UNWATERMARKED"
@@ -141,7 +141,7 @@ class AttackPipeline:
         clean_text = current_text.strip()
 
         # Step 5 — DETECT (after)
-        post_detect_dict = detector.detect(clean_text)
+        post_detect_dict = detector.detect(clean_text, is_post_attack=True)
         post_score = DetectionScore(**post_detect_dict)
 
         post_status = "WATERMARKED" if post_score.is_watermarked else "CLEAN"

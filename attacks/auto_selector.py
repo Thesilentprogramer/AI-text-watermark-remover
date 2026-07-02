@@ -12,10 +12,9 @@ def evaluate_optimal_attack(text: str, pre_g_value: float, zero_width_count: int
     Evaluates optimal attack mode based on text metrics.
 
     Decision Rules:
-    1. Zero-width unicode anomalies detected -> 'sanitize' + 'perturb' (Sanitize zero-width first)
-    2. Very high G-value (>= 0.74) -> 'combined' (Gemma 4 Paraphrase + Secondary Perturbation)
-    3. Short text (< 150 tokens) -> 'shuffle' or 'paraphrase' (Fast, preserves semantics)
-    4. Long text (>= 150 tokens) -> 'paraphrase' (Thorough 128K LLM rewrite)
+    1. Zero-width unicode anomalies detected -> 'combined' (Sanitize + Combined Pass)
+    2. Watermark signal detected (G >= 0.55) -> 'combined' (Gemma 4 Paraphrase + Secondary Perturbation)
+    3. Low watermark signal (G < 0.55) -> 'paraphrase' (Fast structural rephrase)
     """
     words = text.split()
     word_count = len(words)
@@ -27,22 +26,15 @@ def evaluate_optimal_attack(text: str, pre_g_value: float, zero_width_count: int
             "rationale": f"Zero-width unicode anomalies ({zero_width_count} chars) detected. Applied Unicode Sanitizer followed by Combined Pass."
         }
 
-    # Rule 2: Extremely High Watermark Signal (G >= 0.74)
-    if pre_g_value >= 0.74:
+    # Rule 2: Watermark Signal Detected (G >= 0.55)
+    if pre_g_value >= 0.55:
         return {
             "attack_mode": "combined",
-            "rationale": f"High SynthID watermark signal (G-Value {pre_g_value:.2f} >= 0.74) detected. Selected Combined Mode (Gemma 4 Paraphrase + Perturb) for 100% signal drop."
+            "rationale": f"Watermark signal detected (G-Value {pre_g_value:.2f} >= 0.55). Selected Combined Mode (Paraphrase + Secondary Perturbation) for total signal destruction."
         }
 
-    # Rule 3: Short Text (< 150 words)
-    if word_count < 150:
-        return {
-            "attack_mode": "paraphrase",
-            "rationale": f"Short text ({word_count} words) detected. Selected Gemma 4 Paraphrase for fast, semantic-preserving transformation."
-        }
-
-    # Rule 4: Long Text (>= 150 words)
+    # Rule 3: Clean/Unwatermarked Input
     return {
         "attack_mode": "combined",
-        "rationale": f"Long form text ({word_count} words) detected. Selected Combined Mode for thorough n-gram hash coverage."
+        "rationale": f"Analyzed {word_count} words. Applied Combined Mode for baseline security optimization."
     }
