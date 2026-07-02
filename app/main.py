@@ -74,7 +74,7 @@ async def health_check():
     )
 
 
-# Static Files Setup for Claymorphism Frontend
+# Static Files Setup for Frontend
 frontend_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "frontend")
 if os.path.exists(frontend_dir):
     app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
@@ -84,4 +84,11 @@ if os.path.exists(frontend_dir):
         index_path = os.path.join(frontend_dir, "index.html")
         if os.path.exists(index_path):
             return FileResponse(index_path)
-        return {"message": "SynthID Watermark Remover API is running. Index.html not found in frontend/"}
+        return {"message": "Index.html not found"}
+
+    @app.get("/app")
+    async def serve_app():
+        app_path = os.path.join(frontend_dir, "app.html")
+        if os.path.exists(app_path):
+            return FileResponse(app_path)
+        return {"message": "App.html not found"}

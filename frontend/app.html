@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Workspace | SynthID Remover</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="app-page">
+    <nav class="neo-nav">
+        <div class="logo"><a href="/" class="nav-link">&larr; Back to Home</a></div>
+        <div class="logo">SYNTH_ID // <span>WORKSPACE</span></div>
+    </nav>
+
+    <main class="neo-container grid-layout">
+        
+        <!-- Left Column: Input and Controls -->
+        <section class="neo-card input-section">
+            <div class="card-header">
+                <h2>Input Text</h2>
+                <div class="btn-group">
+                    <button id="sampleWmBtn" class="neo-btn small">Sample: Watermarked</button>
+                    <button id="sampleCleanBtn" class="neo-btn small">Sample: Clean</button>
+                </div>
+            </div>
+            
+            <textarea id="inputText" class="neo-textarea" placeholder="Paste watermarked text here..." rows="8"></textarea>
+            
+            <div class="controls">
+                <div class="control-group">
+                    <label for="attackMode">Attack Strategy</label>
+                    <select id="attackMode" class="neo-select">
+                        <option value="combined" selected>Combined (Paraphrase + Perturb)</option>
+                        <option value="paraphrase">Paraphrase Only (Gemma 4 E2B)</option>
+                        <option value="homoglyph">Homoglyph Attack (Unicode Lookalikes)</option>
+                        <option value="shuffle">Sentence Shuffling Attack</option>
+                        <option value="perturb">Token Perturbation Only</option>
+                        <option value="sanitize">Sanitize Only (Zero-Width Strip)</option>
+                    </select>
+                </div>
+                
+                <div class="control-group check-group">
+                    <label class="neo-checkbox-label">
+                        <input type="checkbox" id="enableThinking" checked>
+                        <span class="neo-checkbox"></span>
+                        Thinking Mode
+                    </label>
+                </div>
+            </div>
+
+            <button id="runBtn" class="neo-btn primary full-width huge-btn">
+                <span id="btnText">Remove Watermark</span>
+                <span id="btnSpinner" class="hidden loading">...</span>
+            </button>
+        </section>
+
+        <!-- Right Column: Output and Diff -->
+        <section class="neo-card output-section">
+            <div class="card-header">
+                <h2>Clean Output</h2>
+                <div class="btn-group">
+                    <button id="viewCleanBtn" class="neo-btn small active">Clean Text</button>
+                    <button id="viewDiffBtn" class="neo-btn small">Word Diff</button>
+                    <button id="copyBtn" class="neo-btn small" disabled>Copy</button>
+                </div>
+            </div>
+
+            <!-- Banner -->
+            <div id="verdictBanner" class="neo-banner">
+                <span id="verdictText">Awaiting input...</span>
+            </div>
+
+            <!-- Score Gauges -->
+            <div class="score-row">
+                <div class="score-box">
+                    <span class="score-label">PRE-ATTACK G-VALUE</span>
+                    <span id="preGVal" class="score-val">0.00</span>
+                    <span id="preBadge" class="neo-badge">Waiting</span>
+                </div>
+                <div class="score-box">
+                    <span class="score-label">POST-ATTACK G-VALUE</span>
+                    <span id="postGVal" class="score-val">0.00</span>
+                    <span id="postBadge" class="neo-badge">Waiting</span>
+                </div>
+            </div>
+
+            <!-- Output Text / Diff Area -->
+            <div class="output-container">
+                <textarea id="outputText" class="neo-textarea" placeholder="Output will appear here..." readonly rows="6"></textarea>
+                
+                <div id="diffViewContainer" class="diff-view hidden">
+                    <div class="diff-legend">
+                        <span class="legend-del">Removed Token</span>
+                        <span class="legend-add">New Token</span>
+                    </div>
+                    <div id="diffHtmlOutput" class="diff-content">Run removal to see diffs.</div>
+                </div>
+            </div>
+
+            <div class="meta-footer">
+                <span id="timingBadge" class="neo-badge outline">Runtime: 0ms</span>
+                <span id="reductionBadge" class="neo-badge outline">Reduction: 0%</span>
+            </div>
+        </section>
+
+        <!-- Bottom Row: Timeline -->
+        <section id="transformationSection" class="neo-card timeline-section hidden span-full">
+            <div class="card-header">
+                <h2>Transformation Timeline</h2>
+            </div>
+            <div class="timeline-tabs" id="timelineTabs">
+                <button class="neo-tab active" data-step="1">1. Sanitize</button>
+                <button class="neo-tab" data-step="2">2. Pre-Detect</button>
+                <button class="neo-tab" data-step="3">3. Attack</button>
+                <button class="neo-tab" data-step="4">4. Perturb</button>
+                <button class="neo-tab" data-step="5">5. Final Clean</button>
+            </div>
+            <div class="timeline-content">
+                <h4 id="stepTitle">Step 1: Sanitize</h4>
+                <p id="stepDesc">...</p>
+                <textarea id="stepTextOutput" class="neo-textarea" readonly rows="3"></textarea>
+            </div>
+            
+            <div class="logs-container">
+                <h4>Pipeline Logs</h4>
+                <ul id="stepLogsList"></ul>
+            </div>
+        </section>
+
+    </main>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

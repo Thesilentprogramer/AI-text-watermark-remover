@@ -3,296 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SynthID Watermark Remover — Claymorphism Edition</title>
+    <title>SynthID Watermark Remover</title>
+    <!-- MathJax for rendering LaTeX formulas -->
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] },
+            svg: { fontCache: 'global' }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles.css">
 </head>
-<body>
-    <div class="clay-background-glow"></div>
+<body class="landing-page">
+    <nav class="neo-nav">
+        <div class="logo">SYNTH_ID // <span>REMOVER</span></div>
+        <a href="/app" class="neo-btn primary">Launch Workspace &rarr;</a>
+    </nav>
 
-    <div class="clay-container">
-        <!-- Header Section -->
-        <header class="clay-card header-card">
-            <div class="header-badge">
-                <span class="pulse-dot"></span>
-                <span>Gemma 4 E2B Engine • Live</span>
-            </div>
-            <h1>SynthID Watermark Remover</h1>
-            <p class="subtitle">Adversarial LLM Paraphrasing, Homoglyph & Token Perturbation Pipeline</p>
+    <main class="neo-container">
+        <!-- Hero Section -->
+        <header class="neo-header">
+            <div class="neo-badge">Gemma 4 E2B Engine Live</div>
+            <h1>Break AI Text Watermarks.</h1>
+            <p>An adversarial ML pipeline utilizing Gemma 4 E2B, Homoglyphs, and Token Perturbation to destroy SynthID logit biases.</p>
+            <a href="/app" class="neo-btn primary huge-btn">Try the Live Tool Now</a>
         </header>
 
-        <!-- Attack Modes Showcase Carousel (Reference Image Design Aesthetic) -->
-        <section class="clay-card carousel-card">
-            <div class="carousel-header-row">
-                <div>
-                    <span class="orange-tag">ATTACK STRATEGIES</span>
-                    <h2 id="carouselTitle">Mode 1: Combined Paraphrase + Perturb</h2>
-                </div>
-                <div class="carousel-nav-btns">
-                    <button id="prevSlideBtn" class="clay-btn small-btn">◄ Prev</button>
-                    <span id="slideIndicator" class="slide-indicator">1 / 6</span>
-                    <button id="nextSlideBtn" class="clay-btn small-btn">Next ►</button>
+        <!-- Attack Modes Showcase Carousel -->
+        <section class="neo-section">
+            <div class="section-title">
+                <h2>Attack Strategies</h2>
+                <div class="carousel-nav">
+                    <button id="prevSlideBtn" class="neo-btn icon-btn">&larr;</button>
+                    <span id="slideIndicator" class="slide-indicator">1/6</span>
+                    <button id="nextSlideBtn" class="neo-btn icon-btn">&rarr;</button>
                 </div>
             </div>
 
-            <!-- Carousel Slide Container -->
-            <div id="carouselSlide" class="carousel-slide-content">
-                <!-- Step Tracker Bar (Styled matching reference image) -->
-                <div class="step-tracker-bar">
-                    <span class="step-label orange-step">1. Sanitize</span>
-                    <span class="step-line active-line"></span>
-                    <span class="step-label orange-step">2. Pre-Detect</span>
-                    <span class="step-line active-line"></span>
-                    <span class="step-label orange-step">3. Paraphrase</span>
-                    <span class="step-line active-line"></span>
-                    <span class="step-label orange-step">4. Perturb</span>
+            <div class="neo-card carousel-card">
+                <h3 id="carouselTitle" class="card-heading">Mode 1: Combined Paraphrase + Perturb</h3>
+                
+                <div class="step-tracker">
+                    <span class="step neo-badge outline">1. Sanitize</span> &rarr;
+                    <span class="step neo-badge outline">2. Pre-Detect</span> &rarr;
+                    <span class="step neo-badge filled">3. Paraphrase</span> &rarr;
+                    <span class="step neo-badge outline">4. Perturb</span>
                 </div>
 
-                <!-- Live Prompt Bubble & Output Box -->
-                <div class="chat-mock-container">
-                    <div class="chat-bubble user-bubble">
-                        <span class="avatar-tag">IN</span>
-                        <div class="bubble-text" id="slideInputText">Input: AI-generated text containing SynthID 4-gram green-list logit bias...</div>
+                <div class="chat-container">
+                    <div class="chat-bubble user">
+                        <div class="avatar">IN</div>
+                        <div class="bubble-body" id="slideInputText">Google DeepMind SynthID technology embeds an imperceptible statistical watermark into AI-generated text by biasing token selection probabilities during logit processing.</div>
                     </div>
-
-                    <div class="chat-bubble agent-bubble">
-                        <span class="avatar-tag orange-avatar">OUT</span>
-                        <div class="bubble-content-box">
-                            <div class="bubble-status-row">
-                                <span class="orange-status-pill">● Active Processing</span>
-                                <span class="badge-tag">G-Value Reduction: ~31%</span>
+                    <div class="chat-bubble agent">
+                        <div class="avatar out">OUT</div>
+                        <div class="bubble-body">
+                            <div class="status-row">
+                                <span class="neo-badge green">Success</span>
+                                <span class="neo-badge">Signal Drop: ~31%</span>
                             </div>
-                            <div class="bubble-main-text" id="slideOutputText">
-                                Output: Paraphrased text generated with Gemma 4 E2B under fresh probability distributions, completely resetting n-gram context hashes.
-                            </div>
+                            <div id="slideOutputText" class="out-text">DeepMind's SynthID framework incorporates a subtle statistical signal into AI text by altering token sampling distributions. Paraphrasing cleanly erases this signature.</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Mathematical Proof Box -->
-                <div class="math-proof-box">
-                    <div class="math-title">Mathematical Formulation & Mechanics</div>
-                    <div class="math-formula" id="slideMathFormula">
+                <div class="math-box">
+                    <h4>Mathematical Formulation</h4>
+                    <div class="formula" id="slideMathFormula">
                         $$P'(x_i | x_{<i}) = P(x_i | x_{<i}) \times \left(1 + g_i - \sum g_j P(x_j)\right)$$
                     </div>
-                    <p class="math-desc" id="slideMathDesc">
-                        SynthID biases logit probabilities by hashing n-gram context tokens ($k=4$). Paraphrasing regenerates the token sequence from scratch, resetting context hashes and reducing mean G-values from $0.72 \rightarrow 0.49$.
-                    </p>
+                    <p id="slideMathDesc">SynthID biases logit probabilities by hashing n-gram context tokens ($k=4$). Paraphrasing regenerates the token sequence from scratch, resetting context hashes and reducing mean G-values from 0.72 to 0.49.</p>
                 </div>
             </div>
         </section>
 
-        <!-- AI Provider Watermark Showcase -->
-        <section class="clay-card provider-card">
-            <div class="card-header">
-                <h2>AI Provider Watermark Benchmarks</h2>
-                <span class="subtitle">Comparing watermarking mechanics across major AI platforms</span>
+        <!-- AI Provider Benchmarks -->
+        <section class="neo-section">
+            <div class="section-title">
+                <h2>Provider Benchmarks</h2>
             </div>
-
-            <!-- Provider Selector Tabs -->
+            
             <div class="provider-tabs">
-                <button class="provider-tab active" data-provider="gemini">Google Gemini (SynthID)</button>
-                <button class="provider-tab" data-provider="chatgpt">OpenAI ChatGPT (GPT-4o)</button>
-                <button class="provider-tab" data-provider="anthropic">Anthropic Claude 3.5</button>
-                <button class="provider-tab" data-provider="llama">Meta Llama 3 / Open Source</button>
+                <button class="neo-tab active" data-provider="gemini">Gemini (SynthID)</button>
+                <button class="neo-tab" data-provider="chatgpt">ChatGPT (GPT-4o)</button>
+                <button class="neo-tab" data-provider="anthropic">Claude 3.5</button>
+                <button class="neo-tab" data-provider="llama">Llama / HF</button>
             </div>
 
-            <div class="provider-info-box">
-                <div class="provider-meta-row">
-                    <span id="providerBadge" class="orange-tag">GOOGLE GEMINI</span>
-                    <span id="providerTech" class="badge-tag">SynthID N-gram Logit Biasing</span>
-                    <span id="providerGVal" class="status-badge red">G-Value: 0.72 (Watermarked)</span>
+            <div class="neo-card provider-card">
+                <div class="provider-meta">
+                    <h3 id="providerBadge">GOOGLE GEMINI</h3>
+                    <span id="providerGVal" class="neo-badge red">G-Value: 0.72 (Watermarked)</span>
                 </div>
-                <p id="providerDesc" class="provider-desc-text">
-                    Google Gemini uses SynthID n-gram context logit biasing. Watermarks are embedded into token selection probabilities during model sampling and survive formatting or minor edits.
-                </p>
-                <button id="loadProviderSampleBtn" class="clay-btn small-btn primary-btn">Load Provider Sample into Workspace</button>
+                <div class="provider-tech" id="providerTech">Tech: SynthID N-gram Logit Biasing</div>
+                <p id="providerDesc">Google Gemini uses SynthID n-gram context logit biasing. Watermarks are embedded into token selection probabilities during model sampling and survive formatting or minor edits.</p>
             </div>
         </section>
+    </main>
 
-        <!-- Dynamic Pipeline Step Bar -->
-        <section class="clay-card pipeline-card">
-            <div class="pipeline-steps">
-                <div id="stepChip1" class="step-chip">
-                    <span class="step-num">1</span>
-                    <span class="step-name">Sanitize</span>
-                </div>
-                <div class="step-arrow">→</div>
-                <div id="stepChip2" class="step-chip">
-                    <span class="step-num">2</span>
-                    <span class="step-name">Detect (Pre)</span>
-                </div>
-                <div class="step-arrow">→</div>
-                <div id="stepChip3" class="step-chip">
-                    <span class="step-num">3</span>
-                    <span class="step-name">Attack</span>
-                </div>
-                <div class="step-arrow">→</div>
-                <div id="stepChip4" class="step-chip">
-                    <span class="step-num">4</span>
-                    <span class="step-name">Perturb</span>
-                </div>
-                <div class="step-arrow">→</div>
-                <div id="stepChip5" class="step-chip">
-                    <span class="step-num">5</span>
-                    <span class="step-name">Detect (Post)</span>
-                </div>
-            </div>
-        </section>
-
-        <!-- Main Workspace: Input & Controls -->
-        <main class="clay-grid">
-            <!-- Left Card: Input Text -->
-            <div class="clay-card workspace-card">
-                <div class="card-header">
-                    <h2>Input Watermarked Text</h2>
-                    <div class="sample-btn-group">
-                        <button id="sampleWmBtn" class="clay-btn small-btn">Sample: Watermarked</button>
-                        <button id="sampleCleanBtn" class="clay-btn small-btn">Sample: Clean</button>
-                    </div>
-                </div>
-                <textarea id="inputText" placeholder="Paste your AI-generated or watermarked text here..." rows="9"></textarea>
-                
-                <div class="control-row">
-                    <div class="control-group">
-                        <label for="attackMode">Attack Strategy</label>
-                        <select id="attackMode" class="clay-select">
-                            <option value="combined" selected>Combined (Paraphrase + Perturb)</option>
-                            <option value="paraphrase">Paraphrase Only (Gemma 4 E2B)</option>
-                            <option value="homoglyph">Homoglyph Attack (Unicode Lookalikes)</option>
-                            <option value="shuffle">Sentence Shuffling Attack</option>
-                            <option value="perturb">Token Perturbation Only</option>
-                            <option value="sanitize">Sanitize Only (Zero-Width Strip)</option>
-                        </select>
-                    </div>
-
-                    <div class="control-group checkbox-group">
-                        <label class="clay-checkbox-label">
-                            <input type="checkbox" id="enableThinking" checked>
-                            <span class="clay-checkbox"></span>
-                            <span>Thinking Mode</span>
-                        </label>
-                    </div>
-                </div>
-
-                <button id="runBtn" class="clay-btn primary-btn">
-                    <span id="btnText">Remove Watermark</span>
-                    <div id="btnSpinner" class="spinner hidden"></div>
-                </button>
-            </div>
-
-            <!-- Right Card: Results & Inline Diff Visualizer -->
-            <div class="clay-card workspace-card">
-                <div class="card-header">
-                    <h2>Verification & Clean Output</h2>
-                    <div class="view-toggle-group">
-                        <button id="viewCleanBtn" class="clay-btn small-btn active-view">Clean Text</button>
-                        <button id="viewDiffBtn" class="clay-btn small-btn">Inline Word Diff</button>
-                        <button id="copyBtn" class="clay-btn small-btn" disabled>Copy</button>
-                    </div>
-                </div>
-
-                <!-- Prominent Verdict Banner -->
-                <div id="verdictBanner" class="verdict-banner gray-banner">
-                    <span id="verdictText">Submit text to analyze and remove SynthID watermark</span>
-                </div>
-
-                <!-- Score Gauges -->
-                <div id="scoreSection" class="score-container">
-                    <div class="score-box pre-box">
-                        <span class="score-label">Pre-Attack G-Value</span>
-                        <div class="score-val-row">
-                            <span id="preGVal" class="score-val">0.00</span>
-                            <span id="preBadge" class="status-badge gray">Waiting</span>
-                        </div>
-                        <span class="score-sub">Watermark Signal ≥ 0.55</span>
-                    </div>
-
-                    <div class="score-divider">➔</div>
-
-                    <div class="score-box post-box">
-                        <span class="score-label">Post-Attack G-Value</span>
-                        <div class="score-val-row">
-                            <span id="postGVal" class="score-val">0.00</span>
-                            <span id="postBadge" class="status-badge gray">Waiting</span>
-                        </div>
-                        <span class="score-sub">Clean Target ~0.49–0.51</span>
-                    </div>
-                </div>
-
-                <!-- Reduction Progress Bar -->
-                <div class="reduction-bar-container">
-                    <div class="reduction-label-row">
-                        <span>Watermark Signal Reduction</span>
-                        <span id="reductionPct">0%</span>
-                    </div>
-                    <div class="clay-progress-track">
-                        <div id="progressBar" class="clay-progress-fill" style="width: 0%;"></div>
-                    </div>
-                </div>
-
-                <!-- Raw Text Area Output -->
-                <textarea id="outputText" placeholder="Clean, un-watermarked output text will appear here..." readonly rows="6"></textarea>
-
-                <!-- Inline Word-Level Diff Visualizer View -->
-                <div id="diffViewContainer" class="diff-view-box hidden">
-                    <div class="diff-header-bar">
-                        <span>Inline Word-Level Diff (Watermark Removal Changes)</span>
-                        <div class="diff-legend">
-                            <span class="legend-del">● Removed Watermarked Word</span>
-                            <span class="legend-add">● Clean Replacement Word</span>
-                        </div>
-                    </div>
-                    <div id="diffHtmlOutput" class="diff-content-area">
-                        Run watermark removal to highlight token transformations.
-                    </div>
-                </div>
-
-                <!-- Status Footer -->
-                <div class="status-footer">
-                    <span id="timingBadge">Runtime: 0 ms</span>
-                    <span id="sanitizedBadge">Unicode Stripped: 0 chars</span>
-                </div>
-            </div>
-        </main>
-
-        <!-- Paragraph Transformation Timeline Section -->
-        <section id="transformationSection" class="clay-card timeline-card hidden">
-            <div class="card-header">
-                <h2>Paragraph Transformation Timeline</h2>
-                <span class="subtitle">Inspect text output after each pipeline step</span>
-            </div>
-
-            <!-- Timeline Navigation Tabs -->
-            <div id="timelineTabs" class="timeline-tabs">
-                <button class="tab-btn active" data-step="1">Step 1: Sanitize</button>
-                <button class="tab-btn" data-step="2">Step 2: Pre-Detect</button>
-                <button class="tab-btn" data-step="3">Step 3: Attack</button>
-                <button class="tab-btn" data-step="4">Step 4: Perturb</button>
-                <button class="tab-btn" data-step="5">Step 5: Final Clean</button>
-            </div>
-
-            <!-- Step Output Inspector -->
-            <div class="step-inspector-box">
-                <div class="step-info-row">
-                    <span id="stepTitle" class="step-title-badge">Step 1: Sanitize</span>
-                    <span id="stepDesc" class="step-desc-text">Stripped zero-width unicode characters</span>
-                </div>
-                <textarea id="stepTextOutput" readonly rows="5"></textarea>
-            </div>
-
-            <!-- Detailed Execution Step Logs -->
-            <div class="logs-card margin-top">
-                <div class="logs-header">Pipeline Execution Log</div>
-                <ul id="stepLogsList" class="logs-list">
-                    <li>System ready.</li>
-                </ul>
-            </div>
-        </section>
-    </div>
-
-    <script src="/static/app.js"></script>
+    <script src="/static/landing.js"></script>
 </body>
 </html>
