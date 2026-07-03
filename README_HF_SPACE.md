@@ -16,15 +16,21 @@ Adversarial ML pipeline for reversing SynthID text watermarks — landing page, 
 - `/` — landing page
 - `/app` — live workspace
 - `/remove-watermark` — API
-- `/health` — health check
+- `/health` — health check (`google_api_configured` must be `true` for Gemma paraphrase)
 
-## Space secrets (Settings → Repository secrets)
+## Required: Space secrets
 
-| Secret | Required |
+Go to **Settings → Secrets and variables → Secrets** (not Variables):
+
+| Secret name | Value |
 |---|---|
-| `GOOGLE_API_KEY` | **Yes** — free Gemma 4 paraphrase via [Google AI Studio](https://aistudio.google.com/apikey) |
+| `GOOGLE_API_KEY` | Your key from [Google AI Studio](https://aistudio.google.com/apikey) |
 
-## Space variables (Settings → Variables)
+After adding the secret, **Factory rebuild** the Space (Settings → Restart this Space).
+
+## Space variables
+
+**Settings → Secrets and variables → Variables:**
 
 | Variable | Value |
 |---|---|
@@ -34,4 +40,12 @@ Adversarial ML pipeline for reversing SynthID text watermarks — landing page, 
 | `ENABLE_LOCAL_GEMMA` | `false` |
 | `ENABLE_PERPLEXITY` | `true` |
 
-`HF_TOKEN` is only needed if you enable local Gemma weights (`ENABLE_LOCAL_GEMMA=true` on a GPU Space).
+## Verify
+
+Open `/health` — expect:
+
+```json
+{"google_api_configured": true, "gemma_api_model": "gemma-4-26b-a4b-it", ...}
+```
+
+If `google_api_configured` is `false`, paraphrase falls back to heuristic (weak rewrites).

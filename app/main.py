@@ -66,11 +66,14 @@ async def remove_watermark(request: WatermarkRequest):
 @app.get("/health", response_model=HealthResponse)
 async def health_check():
     paraphraser = get_paraphrase_engine()
+    configured_model = paraphraser._configured_gemma_api_model or os.getenv("GEMMA_API_MODEL")
     return HealthResponse(
         status="ok",
         model_loaded=paraphraser.loaded if paraphraser else False,
         device=paraphraser.device if paraphraser else "unknown",
-        engine="ExtendedDetector (synthid-text) + Gemma 4 E2B"
+        engine="ExtendedDetector (synthid-text) + Gemma 4 E2B",
+        google_api_configured=bool(os.getenv("GOOGLE_API_KEY")),
+        gemma_api_model=configured_model,
     )
 
 

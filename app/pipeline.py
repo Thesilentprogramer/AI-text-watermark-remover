@@ -52,6 +52,7 @@ class AttackPipeline:
     ) -> tuple:
         paraphraser = get_paraphrase_engine()
         paraphrase_source = "skipped"
+        paraphrase_detail = None
         step_num = 3
 
         for layer in layers:
@@ -60,9 +61,13 @@ class AttackPipeline:
                     text=current_text,
                 ).strip()
                 paraphrase_source = getattr(paraphraser, "last_paraphrase_source", "skipped")
+                paraphrase_detail = getattr(paraphraser, "last_paraphrase_reason", None)
                 desc = "Gemma 4 E2B paraphrased token sequence under fresh probability distributions."
                 if paraphrase_source == "heuristic":
-                    desc += " (heuristic fallback — set GOOGLE_API_KEY + GEMMA_API_MODEL for Gemma 4 API)"
+                    if paraphrase_detail == "missing_google_api_key":
+                        desc += " (heuristic fallback — GOOGLE_API_KEY not set on server)"
+                    else:
+                        desc += " (heuristic fallback — Gemma 4 API unavailable or output too short)"
                 step_logs.append(f"Step {step_num} (Paraphrase): {desc}")
 
             elif layer == "backtranslate":
@@ -115,7 +120,7 @@ class AttackPipeline:
         if not layers:
             step_logs.append(f"Step 3 (Attack): No attack layers applied for mode '{attack_mode}'.")
 
-        return current_text, paraphrase_source
+        return current_text, paraphrase_source, paraphrase_detail
 
     def run(self, request: WatermarkRequest) -> WatermarkResponse:
         start_time = time.time()
@@ -196,7 +201,8 @@ class AttackPipeline:
 
         current_text = sanitized_text
         paraphrase_source = "skipped"
-        current_text, paraphrase_source = self._execute_layers(
+        paraphrase_detail = None
+        current_text, paraphrase_source, paraphrase_detail = self._execute_layers(
             layers=layers,
             current_text=current_text,
             request=request,
@@ -271,6 +277,7 @@ class AttackPipeline:
             auto_selected=auto_selected,
             auto_rationale=auto_rationale,
             paraphrase_source=paraphrase_source if paraphrase_source != "skipped" else None,
+            paraphrase_detail=paraphrase_detail,
             output_unchanged=output_unchanged,
             processing_time_ms=elapsed_ms,
         )

@@ -42,6 +42,7 @@ class Gemma4ParaphrasingAttack:
         self.processor = None
         self.loaded = False
         self.last_paraphrase_source = "skipped"
+        self.last_paraphrase_reason: str | None = None
 
     def load_local_model(self):
         """Loads Gemma 4 E2B weights locally using AutoModelForImageTextToText."""
@@ -86,8 +87,10 @@ class Gemma4ParaphrasingAttack:
         """
         if not text or len(text.strip()) == 0:
             self.last_paraphrase_source = "skipped"
+            self.last_paraphrase_reason = None
             return ""
 
+        self.last_paraphrase_reason = None
         backend = os.getenv("PARAPHRASE_BACKEND", "auto").lower()
         if backend == "heuristic":
             self.last_paraphrase_source = "heuristic"
@@ -101,25 +104,34 @@ class Gemma4ParaphrasingAttack:
                 return res
 
         # 2. Attempt Gemma 4 API (Google AI Studio free tier) if key is configured
-        if backend in ("auto", "api") and self.google_api_key:
-            api_res = self._paraphrase_gemma_api(text)
-            if api_res and self._is_usable_paraphrase(text, api_res):
-                self.last_paraphrase_source = "api" if getattr(self, "_api_paraphrase_used", False) else "heuristic"
-                logger.info(
-                    "Gemma 4 paraphrase ok (%d -> %d chars, source=%s)",
+        if backend in ("auto", "api"):
+            if not self.google_api_key:
+                self.last_paraphrase_reason = "missing_google_api_key"
+                logger.warning("GOOGLE_API_KEY not configured — using heuristic paraphrase.")
+            else:
+                api_res = self._paraphrase_gemma_api(text)
+                if api_res and self._is_usable_paraphrase(text, api_res):
+                    self.last_paraphrase_source = "api" if getattr(self, "_api_paraphrase_used", False) else "heuristic"
+                    if self.last_paraphrase_source == "heuristic":
+                        self.last_paraphrase_reason = "api_partial_chunks"
+                    logger.info(
+                        "Gemma 4 paraphrase ok (%d -> %d chars, source=%s)",
+                        len(text),
+                        len(api_res),
+                        self.last_paraphrase_source,
+                    )
+                    return api_res
+                self.last_paraphrase_reason = "api_empty_or_short"
+                logger.warning(
+                    "Gemma 4 API paraphrase unusable (in=%d out=%d); using heuristic fallback.",
                     len(text),
-                    len(api_res),
-                    self.last_paraphrase_source,
+                    len(api_res or ""),
                 )
-                return api_res
-            logger.warning(
-                "Gemma 4 API paraphrase unusable (in=%d out=%d); using heuristic fallback.",
-                len(text),
-                len(api_res or ""),
-            )
 
         # 3. Structural fallback (synonym + perturb + shuffle)
         self.last_paraphrase_source = "heuristic"
+        if not self.last_paraphrase_reason:
+            self.last_paraphrase_reason = "heuristic_fallback"
         return self._paraphrase_heuristic_fallback(text)
 
     def _paraphrase_local(self, text: str, temperature: float, top_p: float, top_k: int) -> str:

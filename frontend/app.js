@@ -185,7 +185,14 @@ document.addEventListener("DOMContentLoaded", () => {
                     : "Output matches sanitized input after attack — text may look unchanged.";
             } else if (data.paraphrase_source === "heuristic") {
                 showWarning = true;
-                warningMsg = "Paraphrase used heuristic fallback — Gemma 4 API output was empty or too short for this text length.";
+                const detail = data.paraphrase_detail || "";
+                if (detail === "missing_google_api_key") {
+                    warningMsg = "GOOGLE_API_KEY is not set on the server. On Hugging Face: Space Settings → Secrets → add GOOGLE_API_KEY, then restart the Space.";
+                } else if (detail === "api_empty_or_short") {
+                    warningMsg = "Gemma 4 API returned empty or truncated text. Check GEMMA_API_MODEL=gemma-4-26b-a4b-it in Space Variables.";
+                } else {
+                    warningMsg = "Paraphrase used heuristic fallback — Gemma 4 API was unavailable for this text.";
+                }
             }
             if (showWarning) {
                 rewriteWarningBox.classList.remove("hidden");

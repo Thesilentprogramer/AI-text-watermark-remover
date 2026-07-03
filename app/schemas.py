@@ -49,6 +49,7 @@ class WatermarkResponse(BaseModel):
     auto_selected: bool = False
     auto_rationale: Optional[str] = None
     paraphrase_source: Optional[str] = None
+    paraphrase_detail: Optional[str] = None
     output_unchanged: bool = False
     processing_time_ms: int
 
@@ -58,3 +59,5 @@ class HealthResponse(BaseModel):
     model_loaded: bool
     device: str
     engine: str
+    google_api_configured: bool = False
+    gemma_api_model: Optional[str] = None
