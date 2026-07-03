@@ -4,3 +4,5 @@ __pycache__/
 .pytest_cache/
 .ds_store
 .DS_Store
+.hf-space-deploy/
+synthid-watermark-remover-hf/

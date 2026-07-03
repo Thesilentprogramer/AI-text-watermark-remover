@@ -19,7 +19,6 @@ def test_remove_watermark_endpoint():
     payload = {
         "text": "Google DeepMind SynthID embeds statistical watermarks into generated text.",
         "attack_mode": "combined",
-        "enable_thinking": True,
         "substitution_rate": 0.15
     }
     response = client.post("/remove-watermark", json=payload)
@@ -42,3 +41,16 @@ def test_auto_mode_endpoint():
     data = response.json()
     assert data["auto_selected"] is True
     assert data["auto_rationale"]
+
+
+def test_homoglyph_mode_endpoint():
+    payload = {
+        "text": "Google DeepMind SynthID embeds statistical watermarks into generated text.",
+        "attack_mode": "homoglyph",
+        "substitution_rate": 0.25,
+    }
+    response = client.post("/remove-watermark", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["attack_used"] == "homoglyph"
+    assert data["clean_text"]

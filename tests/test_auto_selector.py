@@ -50,7 +50,15 @@ def test_low_perplexity_short_text_backtranslate():
         pre_g_value=0.50, unicode_anomaly_score=0.0, zero_width_count=0,
         token_count=80, perplexity=40.0,
     )
-    assert plan.attack_mode == "backtranslate"
+    assert plan.attack_mode == "paraphrase"
+
+
+def test_borderline_g_long_text_paraphrase_when_ppl_unavailable():
+    plan = select_attack(
+        pre_g_value=0.50, unicode_anomaly_score=0.0, zero_width_count=0,
+        token_count=150, perplexity=0.0,
+    )
+    assert plan.attack_mode == "paraphrase"
 
 
 def test_g_overrides_length():

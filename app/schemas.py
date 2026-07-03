@@ -8,10 +8,6 @@ class WatermarkRequest(BaseModel):
         default="auto",
         description="Attack strategy: 'auto' (intelligent adaptive selector), 'combined', 'paraphrase', 'perturb', 'homoglyph', 'shuffle', or 'sanitize'"
     )
-    enable_thinking: Optional[bool] = Field(
-        default=True,
-        description="Enable thinking mode for Gemma 4 paraphrasing"
-    )
     substitution_rate: Optional[float] = Field(
         default=0.15,
         ge=0.0,
@@ -52,6 +48,8 @@ class WatermarkResponse(BaseModel):
     attack_used: str
     auto_selected: bool = False
     auto_rationale: Optional[str] = None
+    paraphrase_source: Optional[str] = None
+    output_unchanged: bool = False
     processing_time_ms: int
 
 

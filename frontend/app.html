@@ -42,14 +42,6 @@
                         <option value="sanitize">Sanitize Only (Zero-Width Strip)</option>
                     </select>
                 </div>
-                
-                <div class="control-group check-group">
-                    <label class="neo-checkbox-label">
-                        <input type="checkbox" id="enableThinking" checked>
-                        <span class="neo-checkbox"></span>
-                        Thinking Mode
-                    </label>
-                </div>
             </div>
 
             <button id="runBtn" class="neo-btn primary full-width huge-btn">
@@ -78,6 +70,15 @@
             <div id="autoRationaleBox" class="auto-rationale-box hidden">
                 <span class="auto-tag">⚡ AUTO-ADAPTIVE RATIONALE</span>
                 <p id="autoRationaleText" class="auto-text">Analysing metrics...</p>
+            </div>
+
+            <!-- Attack status -->
+            <div id="attackStatusBox" class="attack-status-box hidden">
+                <span id="attackUsedBadge" class="neo-badge outline">Attack: —</span>
+                <span id="paraphraseSourceBadge" class="neo-badge outline hidden">Paraphrase: —</span>
+            </div>
+            <div id="rewriteWarningBox" class="rewrite-warning-box hidden">
+                <span id="rewriteWarningText">Output unchanged — no attack was applied or paraphrase used a weak fallback.</span>
             </div>
 
             <!-- Score Gauges -->

@@ -9,7 +9,8 @@
         window.MathJax = {
             tex: {
                 inlineMath: [['$', '$'], ['\\(', '\\)']],
-                displayMath: [['$$', '$$'], ['\\[', '\\]']]
+                displayMath: [['$$', '$$'], ['\\[', '\\]']],
+                packages: { '[+]': ['ams'] }
             },
             svg: {
                 fontCache: 'global'
@@ -42,6 +43,43 @@
             <p>An adversarial ML pipeline with confidence-based attack selection — Gemma 4 E2B, perplexity detection, homoglyphs, and token perturbation.</p>
             <a href="/app" class="neo-btn primary huge-btn">Try the Live Tool Now</a>
         </header>
+
+        <!-- What This Demonstrates (portfolio ML story) -->
+        <section class="neo-section ml-story-section">
+            <div class="section-title">
+                <h2>What This Demonstrates</h2>
+                <span class="neo-badge">ML Knowledge</span>
+            </div>
+            <p class="section-lead">Not just an API wrapper — this project shows understanding of LLM watermarking at the token-probability level.</p>
+            <div class="ml-story-grid">
+                <article class="ml-story-card neo-card">
+                    <span class="ml-story-num">01</span>
+                    <h3>Token-Probability Watermarks</h3>
+                    <p>SynthID embeds signals during generation by hashing n-gram context ($k=4$) to bias token selection toward a green-list vocabulary — not metadata, not visible text.</p>
+                </article>
+                <article class="ml-story-card neo-card">
+                    <span class="ml-story-num">02</span>
+                    <h3>G-Value as Statistical Measure</h3>
+                    <p>Mean green-list alignment above 0.55 indicates watermark confidence; ~0.49–0.51 is baseline noise. The workspace shows pre/post G-values on every run.</p>
+                </article>
+                <article class="ml-story-card neo-card">
+                    <span class="ml-story-num">03</span>
+                    <h3>Why Paraphrasing Works</h3>
+                    <p>Regenerating text with an unwatermarked model (Gemma 4 E2B) draws fresh token sequences — n-gram hash patterns reset regardless of original watermark strength.</p>
+                </article>
+                <article class="ml-story-card neo-card">
+                    <span class="ml-story-num">04</span>
+                    <h3>Character vs Statistical Attacks</h3>
+                    <p>Unicode tricks (zero-width chars, homoglyphs) break character-level watermarks; paraphrase and perturbation target statistical logit biasing — different physics, different defenses.</p>
+                </article>
+                <article class="ml-story-card neo-card ml-story-card--wide">
+                    <span class="ml-story-num">05</span>
+                    <h3>Self-Evaluating Pipeline</h3>
+                    <p>Every attack is scored before and after: G-value drop %, perplexity, auto-selector rationale, and a 5-step transformation timeline prove effectiveness quantitatively.</p>
+                    <a href="/app" class="neo-btn primary">See Live Scores &rarr;</a>
+                </article>
+            </div>
+        </section>
 
         <!-- Attack Modes Showcase Carousel -->
         <section class="neo-section">
@@ -84,11 +122,9 @@
                 <div class="math-box">
                     <div class="math-header">MATHEMATICAL FORMULATION</div>
                     <div class="formula-container">
-                        <div id="slideMathFormula" class="formula">
-                            \[ P'(x_i | x_{<i}) = P(x_i | x_{<i}) \cdot \left(1 + g_i - \bar{g}\right) \]
-                        </div>
+                        <div id="slideMathFormula" class="formula"></div>
                     </div>
-                    <p id="slideMathDesc" class="math-desc">SynthID biases logit probabilities by hashing n-gram context tokens ($k=4$). Paraphrasing regenerates the token sequence from scratch, resetting context hashes and reducing mean G-values from 0.72 to 0.49.</p>
+                    <p id="slideMathDesc" class="math-desc"></p>
                 </div>
             </div>
         </section>
@@ -97,10 +133,14 @@
         <section class="neo-section method-artifacts-section">
             <div class="section-title">
                 <h2>Method Artifacts</h2>
-                <span class="neo-badge">Live Demos</span>
+                <div class="carousel-nav">
+                    <button id="prevArtifactBtn" class="neo-btn icon-btn" aria-label="Previous Artifact">&larr;</button>
+                    <span id="artifactIndicator" class="slide-indicator">1/4</span>
+                    <button id="nextArtifactBtn" class="neo-btn icon-btn" aria-label="Next Artifact">&rarr;</button>
+                </div>
             </div>
-            <p class="section-lead">How each attack method works — animated pipeline previews.</p>
-            <div id="artifactGrid" class="artifact-grid"></div>
+            <p class="section-lead">Animated pipeline previews for core detection and attack methods.</p>
+            <div id="artifactCarousel" class="artifact-carousel"></div>
         </section>
 
         <!-- AI Provider Benchmarks -->

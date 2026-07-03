@@ -3,10 +3,36 @@
 > **Reverse-Engineering LLM Text Watermarks using Gemma 4 E2B & Multi-Stage Adversarial Paraphrasing**  
 > *Techniques adapted & expanded from [aloshdenny/reverse-SynthID-text](https://github.com/aloshdenny/reverse-SynthID-text)*
 
-[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi)](https.fastapi.tiangolo.com)
+**Live Demo:** [ultimatememer-synthid-watermark-remover.hf.space](https://ultimatememer-synthid-watermark-remover.hf.space)
+
+[![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688?style=for-the-badge&logo=fastapi)](https://fastapi.tiangolo.com)
 [![Gemma 4](https://img.shields.io/badge/Model-Gemma--4--E2B--it-4285F4?style=for-the-badge&logo=google)](https://huggingface.co/google/gemma-4-E2B-it)
 [![PyTorch](https://img.shields.io/badge/Framework-PyTorch--2.2-EE4C2C?style=for-the-badge&logo=pytorch)](https://pytorch.org)
-[![UI Theme](https://img.shields.io/badge/UI-Claymorphism-FF7043?style=for-the-badge)](https://hype4.academy/articles/design/claymorphism-in-user-interfaces)
+[![UI Theme](https://img.shields.io/badge/UI-Neo--Brutalism-FF7043?style=for-the-badge)](https://huggingface.co/spaces/ultimatememer/synthid-watermark-remover)
+
+---
+
+## My Contributions vs Upstream
+
+This project builds on [aloshdenny/reverse-SynthID-text](https://github.com/aloshdenny/reverse-SynthID-text). The following are **original to this repo**:
+
+| Component | Description |
+|---|---|
+| **Confidence-based attack selector** | Routes input to paraphrase, back-translate, combined, or sanitize based on G-value, token count, unicode anomalies, and perplexity |
+| **ExtendedDetector** | Wraps upstream SynthID detector and adds GPT-2 perplexity scoring for AI text without SynthID signal |
+| **Layer-based pipeline** | `sanitize → detect(pre) → attack → detect(post)` with step logs and quantitative reduction metrics |
+| **Back-translation attack** | EN→DE→EN via Helsinki-NLP MarianMT for fast n-gram boundary reset |
+| **Full-stack eval loop** | FastAPI API + workspace UI showing pre/post G-values, perplexity, and word-level diff |
+| **Landing page + method artifacts** | Animated pipeline demos explaining each attack method |
+
+**From upstream (vendored):** `synthid_text` module, `WatermarkDetector`, homoglyph attack, token perturbation classes.
+
+---
+
+## Portfolio
+
+**Resume bullet:**
+> Built an adversarial ML pipeline to evaluate SynthID text watermark robustness, combining G-value detection, GPT-2 perplexity scoring, and a confidence-based attack selector (paraphrase / back-translation / combined). Deployed as a FastAPI app with quantitative pre/post attack metrics on Hugging Face Spaces.
 
 ---
 
@@ -50,7 +76,7 @@ User Text Input
 [Step 2 — DETECT (Pre)] ──► WatermarkDetector calculates initial G-value (Threshold ≥ 0.55)
        │
        ▼
-[Step 3 — ATTACK] ──► Gemma 4 E2B-it regenerates full token sequence (enable_thinking=True)
+[Step 3 — ATTACK] ──► Gemma 4 E2B-it regenerates full token sequence
        │
        ▼
 [Step 4 — PERTURB] ──► Secondary synonym swapping & structural variation pass
@@ -71,17 +97,18 @@ Show User: Before G-Value | After G-Value | % Reduction | Clean Output Text
 | **Backend** | FastAPI, Python 3.11, PyTorch 2.2+, Uvicorn |
 | **ML Model** | `google/gemma-4-E2B-it` via Hugging Face `AutoModelForImageTextToText` & `AutoProcessor` (`bfloat16`, `device_map="auto"`) |
 | **Watermark Engine** | Vendored `synthid-text` via [reverse-SynthID-text](https://github.com/aloshdenny/reverse-SynthID-text), `ExtendedDetector`, GPT-2 tokenizer |
-| **UI Theme** | **Claymorphism** — Dual inner light/dark shadows, 3D inflated cards (`24px`), tactile pill buttons based on [Hype4 Academy](https://hype4.academy/articles/design/claymorphism-in-user-interfaces) principles |
+| **UI Theme** | **Neo-brutalism** — bold borders, offset shadows, high-contrast cards |
 | **Testing** | Pytest, FastAPI TestClient |
 
 ---
 
-## Claymorphism UI Aesthetics
+## Neo-Brutalism UI
 
-Designed according to Michał Malewicz's **Claymorphism** specification:
-- **Dual Inner Shadows**: Upper-left white specular reflection (`inset 4px 4px 8px ...`) paired with a lower-right dark inner depth shadow (`inset -6px -6px 12px ...`) creating soft 3D inflated volume.
-- **Floating Drop Shadows**: Soft elevated shadows (`10px 15px 30px ...`) positioning containers cleanly above the slate backdrop.
-- **Interactive Controls**: Tactile pill buttons (`999px` radius) with active click depress feedback (`transform: translateY(1px)`).
+The frontend uses a **neo-brutalism** design system:
+- **Bold borders** (`3px solid #000`) and offset box shadows (`4px 4px 0 #000`)
+- **High-contrast color blocks** — yellow, cyan, pink, green accent badges
+- **Space Grotesk + JetBrains Mono** typography
+- **Animated method artifacts** on the landing page with step progress and chat-bubble demos
 
 ---
 
@@ -105,10 +132,15 @@ AI-text-watermark-remover/
 │   ├── extended_detector.py ← SynthID G-value + optional perplexity
 │   └── src/synthid_text/    ← Vendored synthid-text module
 ├── frontend/
-│   ├── index.html           ← Landing page
-│   ├── app.html             ← Claymorphism workspace UI
-│   ├── styles.css           ← Claymorphism CSS design system
+│   ├── index.html           ← Landing page with MathJax carousel
+│   ├── app.html             ← Workspace UI
+│   ├── styles.css           ← Neo-brutalism CSS design system
 │   └── app.js               ← Async fetch controller & score gauges
+├── scripts/
+│   ├── eval_benchmark.py    ← Reproducible detection/attack benchmark
+│   └── deploy-hf.sh         ← Hugging Face Space deploy script
+├── results/
+│   └── benchmark.json       ← Latest benchmark snapshot
 ├── tests/
 │   ├── test_detector.py
 │   ├── test_auto_selector.py
@@ -154,15 +186,83 @@ Start the FastAPI application:
 uvicorn app.main:app --reload --port 8000
 ```
 
-Open your browser at `http://localhost:8000` to access the Claymorphism web interface.
+Open your browser at `http://localhost:8000` to access the web interface.
 
 ### 4. Running Tests
 
 Execute the automated test suite:
 
 ```bash
-pytest tests/
+pytest tests/ --ignore=tests/test_backtranslate.py
 ```
+
+### 5. Running the Benchmark
+
+Reproduce evaluation numbers for the README:
+
+```bash
+python scripts/eval_benchmark.py --detect-only   # CI-safe: detection only
+python scripts/eval_benchmark.py                   # + attack modes (API key for paraphrase)
+```
+
+Results are written to `results/benchmark.json`.
+
+---
+
+## Evaluation Results
+
+Benchmark run on 5 sample texts (bundled `watermarked.txt` / `clean.txt` + synthetic samples). Regenerate with `python scripts/eval_benchmark.py`.
+
+### Detection (pre-attack)
+
+| Sample | G-value | Watermarked | Tokens |
+|---|---:|---|---:|
+| watermarked | 0.5086 | no | 155 |
+| clean | 0.4935 | no | 106 |
+| unicode_hidden | 0.4875 | no | 20 |
+| gemini_style | 0.4938 | no | 52 |
+| short_ai | 0.5175 | no | 25 |
+
+### Attack modes (avg across 5 samples)
+
+| Attack mode | Samples | Avg G (pre) | Avg G (post) | Avg drop % | Success rate (G_post < 0.55) |
+|---|---:|---:|---:|---:|---:|
+| perturb | 5 | 0.4971 | 0.4957 | 0.5% | 100.0% |
+| sanitize_perturb | 5 | 0.4971 | 0.4936 | 0.7% | 100.0% |
+| paraphrase | 5 | 0.4971 | 0.4877 | 1.9% | 100.0% |
+| combined | 5 | 0.4971 | 0.4839 | 2.6% | 100.0% |
+| auto | 5 | 0.4971 | 0.4971 | 0.0% | 100.0% |
+
+*Note: Bundled samples have baseline G-values (~0.49–0.52) without strong SynthID signal. Stronger watermarked inputs (G > 0.55) show larger drops — see the live demo with Gemini output.*
+
+---
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Output identical to input | Auto mode selected `none` | Use **Combined** mode, or paste AI text with low perplexity (&lt; 60) |
+| Only slight word swaps | Gemma 4 API failed → heuristic fallback | Set `GOOGLE_API_KEY` (free: [Google AI Studio](https://aistudio.google.com/apikey)); `PARAPHRASE_BACKEND=api` |
+| Slow on long text | Chunked API fallback | Default `GEMMA_API_CHUNKING=auto` uses one free API call first; chunking only if needed |
+| No API key | Heuristic only | Set `PARAPHRASE_BACKEND=heuristic` (free, instant, weaker rewrites) |
+| Error on back-translate | MarianMT / torch version issue | Use **Paraphrase** or **Combined**; upgrade torch ≥ 2.6 |
+| Auto still skips attack | Perplexity disabled or borderline G | Set `ENABLE_PERPLEXITY=true`; for demos set `FORCE_ATTACK=true` |
+
+The workspace UI shows **Attack** mode and **Paraphrase** source (`api`, `local`, or `heuristic`) after each run. A yellow warning appears when output is unchanged or heuristic fallback was used.
+
+---
+
+## Ethics and Limitations
+
+**Purpose:** This project is for **adversarial robustness research** and red-teaming watermark detectors. It evaluates how statistical watermarks behave under paraphrase, perturbation, and translation attacks.
+
+**Not intended for:** circumventing academic integrity policies, bypassing platform content rules, or disguising AI-generated work as human-written.
+
+**Limitations:**
+- Paraphrase uses the **free Google AI Studio tier** by default (`GOOGLE_API_KEY` + `PARAPHRASE_BACKEND=api`). Set `PARAPHRASE_BACKEND=heuristic` for zero-API local rewrites. GPU local Gemma needs `ENABLE_LOCAL_GEMMA=true` + `HF_TOKEN`.
+- GPT-2 perplexity is a heuristic, not a calibrated AI detector
+- G-value threshold (≥ 0.55) assumes SynthID-style n-gram green-list biasing
+- Homoglyph and back-translation modes may fail on certain torch/transformers versions
 
 ---
 
@@ -176,7 +276,6 @@ pytest tests/
 {
   "text": "Google DeepMind's SynthID technology embeds an imperceptible statistical watermark into AI-generated text...",
   "attack_mode": "combined",
-  "enable_thinking": true,
   "substitution_rate": 0.15
 }
 ```
@@ -201,6 +300,8 @@ pytest tests/
   },
   "watermark_reduction_pct": 30.99,
   "attack_used": "combined",
+  "paraphrase_source": "api",
+  "output_unchanged": false,
   "processing_time_ms": 1420
 }
 ```
@@ -222,7 +323,7 @@ pytest tests/
 
 - Base reverse-engineering techniques & reference classes from [aloshdenny/reverse-SynthID-text](https://github.com/aloshdenny/reverse-SynthID-text).
 - SynthID paper & logit processor specifications by Google DeepMind.
-- Claymorphism UI design guidelines from [Hype4 Academy](https://hype4.academy/articles/design/claymorphism-in-user-interfaces).
+- Deployed on [Hugging Face Spaces](https://huggingface.co/spaces/ultimatememer/synthid-watermark-remover).
 
 ---
 

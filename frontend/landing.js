@@ -1,12 +1,14 @@
 document.addEventListener("DOMContentLoaded", () => {
-    function typeSetMath() {
-        if (window.MathJax) {
-            if (window.MathJax.typesetPromise) {
-                window.MathJax.typesetPromise().catch(err => console.log('MathJax typeset error:', err));
-            } else if (window.MathJax.typeset) {
-                window.MathJax.typeset();
-            }
-        }
+    function typesetMathElements(elements) {
+        const targets = (elements || []).filter(Boolean);
+        if (!targets.length || !window.MathJax?.startup?.promise) return;
+
+        return window.MathJax.startup.promise
+            .then(() => {
+                if (window.MathJax.typesetClear) window.MathJax.typesetClear(targets);
+                return window.MathJax.typesetPromise(targets);
+            })
+            .catch(err => console.warn("MathJax typeset error:", err));
     }
 
     // ==========================================
@@ -71,12 +73,11 @@ document.addEventListener("DOMContentLoaded", () => {
         carouselTitle.innerText = slide.title;
         slideInputText.innerText = slide.input;
         slideOutputText.innerText = slide.output;
-        slideMathFormula.innerHTML = slide.formula;
-        slideMathDesc.innerHTML = slide.desc;
+        slideMathFormula.textContent = slide.formula;
+        slideMathDesc.textContent = slide.desc;
         slideIndicator.innerText = `${idx + 1}/${CAROUSEL_SLIDES.length}`;
-        
-        // Trigger MathJax re-render
-        setTimeout(typeSetMath, 50);
+
+        typesetMathElements([slideMathFormula, slideMathDesc]);
     }
 
     const prevSlideBtn = document.getElementById("prevSlideBtn");
@@ -93,9 +94,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         renderSlide(0);
     }
-
-    // Initial MathJax trigger
-    setTimeout(typeSetMath, 300);
 
     // ==========================================
     // AI PROVIDER BENCHMARKS
@@ -178,99 +176,6 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
         {
-            title: "Combined Pipeline",
-            description: "Full layered attack — paraphrase, synonym perturbation, and entropy for maximum signal destruction.",
-            tag: "WATERMARK REMOVAL",
-            agentName: "Combined Attack Agent",
-            statusLabel: "Processing",
-            userMessage: "Remove SynthID from this watermarked passage.",
-            steps: ["Sanitize", "Paraphrase", "Perturb", "Entropy"],
-            outcomes: [
-                "Stripped 0 hidden unicode characters.",
-                "Gemma 4 E2B rewrote token sequence under fresh distributions.",
-                "Synonym perturbation applied (rate=0.15).",
-                "G dropped 0.72 → 0.49. Signal destroyed."
-            ],
-            metaChips: ["G: 0.72→0.49", "Drop: 32%", "Status: CLEAN"]
-        },
-        {
-            title: "Gemma 4 Paraphrase",
-            description: "Complete token sequence regeneration via Gemma 4 E2B — destroys n-gram hash patterns.",
-            tag: "WATERMARK REMOVAL",
-            agentName: "Paraphrase Agent",
-            statusLabel: "Generating",
-            userMessage: "Rewrite this token sequence completely.",
-            steps: ["Load prompt", "Generate", "Strip thinking", "Output"],
-            outcomes: [
-                "Building chat template with system + user roles…",
-                "Sampling with temperature=1.0, top_p=0.95…",
-                "Stripping <thought> reasoning tokens via parse_response().",
-                "Tokens regenerated. N-gram context hashes reset."
-            ],
-            metaChips: ["Model: Gemma 4 E2B", "Thinking: on", "Tokens: new"]
-        },
-        {
-            title: "Back-Translation",
-            description: "EN→DE→EN via Helsinki-NLP MarianMT — fast n-gram boundary reset for short text.",
-            tag: "WATERMARK REMOVAL",
-            agentName: "Back-Translate Agent",
-            statusLabel: "Translating",
-            userMessage: "Fast-clean this short AI paragraph.",
-            steps: ["EN → DE", "DE → EN", "Verify"],
-            outcomes: [
-                "Forwarding to Helsinki-NLP opus-mt-en-de…",
-                "Back-translating via opus-mt-de-en…",
-                "N-gram boundaries reset via MarianMT. Meaning preserved."
-            ],
-            metaChips: ["Pivot: German", "Chunks: 1", "Speed: fast"]
-        },
-        {
-            title: "Perplexity Detection",
-            description: "GPT-2 perplexity scoring flags AI text even when SynthID G-value is baseline.",
-            tag: "DETECTION",
-            agentName: "Perplexity Scanner",
-            statusLabel: "Scanning",
-            userMessage: "Is this AI-generated? No SynthID signal detected.",
-            steps: ["Tokenize", "GPT-2 forward", "Compute PPL", "Classify"],
-            outcomes: [
-                "Encoding text with GPT-2 tokenizer…",
-                "Running forward pass, computing cross-entropy loss…",
-                "Perplexity = exp(loss) = 31.2",
-                "Classification: likely AI. Flagged for attack despite G=0.50."
-            ],
-            metaChips: ["PPL: 31.2", "Label: likely AI", "G: 0.50"]
-        },
-        {
-            title: "Sanitize + Perturb",
-            description: "Strips zero-width unicode tricks then applies synonym substitution.",
-            tag: "WATERMARK REMOVAL",
-            agentName: "Sanitize Agent",
-            statusLabel: "Cleaning",
-            userMessage: "Text with hidden zero-width characters injected at character level.",
-            steps: ["Strip unicode", "Synonym swap", "Verify"],
-            outcomes: [
-                "Removed 3 hidden chars (U+200B, U+FEFF).",
-                "Applied synonym perturbation to break residual patterns.",
-                "Character-level + statistical cleanup complete."
-            ],
-            metaChips: ["Removed: 3 chars", "Mode: sanitize_perturb", "Rate: 0.15"]
-        },
-        {
-            title: "Homoglyph Attack",
-            description: "Replaces ASCII with Cyrillic lookalikes — breaks tokenizer indexing, stays human-readable.",
-            tag: "WATERMARK REMOVAL",
-            agentName: "Homoglyph Agent",
-            statusLabel: "Transforming",
-            userMessage: "Break tokenizer indexing without changing visual appearance.",
-            steps: ["Map ASCII", "Replace Cyrillic", "Re-tokenize"],
-            outcomes: [
-                "Mapping a→а, e→е, o→о, c→с…",
-                "Applied homoglyph substitution (rate=0.25).",
-                "SуnthID → different token IDs. Hash patterns broken."
-            ],
-            metaChips: ["Rate: 0.25", "Script: Cyrillic", "Visual: identical"]
-        },
-        {
             title: "SynthID G-Value Detection",
             description: "Real SynthID green-list alignment via vendored synthid-text logits processor.",
             tag: "DETECTION",
@@ -289,8 +194,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 left: { title: "PRE-ATTACK", lines: ["G-Value: 0.71", "Status: WATERMARKED", "Confidence: high"], footer: "Attack needed" },
                 right: { title: "POST-ATTACK", lines: ["G-Value: 0.49", "Status: CLEAN", "Drop: 31%"], footer: "Success" }
             }
+        },
+        {
+            title: "Perplexity Detection",
+            description: "GPT-2 perplexity scoring flags AI text even when SynthID G-value is baseline.",
+            tag: "DETECTION",
+            agentName: "Perplexity Scanner",
+            statusLabel: "Scanning",
+            userMessage: "Is this AI-generated? No SynthID signal detected.",
+            steps: ["Tokenize", "GPT-2 forward", "Compute PPL", "Classify"],
+            outcomes: [
+                "Encoding text with GPT-2 tokenizer…",
+                "Running forward pass, computing cross-entropy loss…",
+                "Perplexity = exp(loss) = 31.2",
+                "Classification: likely AI. Flagged for attack despite G=0.50."
+            ],
+            metaChips: ["PPL: 31.2", "Label: likely AI", "G: 0.50"]
+        },
+        {
+            title: "Combined Pipeline",
+            description: "Full layered attack — paraphrase, synonym perturbation, and entropy for maximum signal destruction.",
+            tag: "WATERMARK REMOVAL",
+            agentName: "Combined Attack Agent",
+            statusLabel: "Processing",
+            userMessage: "Remove SynthID from this watermarked passage.",
+            steps: ["Sanitize", "Paraphrase", "Perturb", "Entropy"],
+            outcomes: [
+                "Stripped 0 hidden unicode characters.",
+                "Gemma 4 E2B rewrote token sequence under fresh distributions.",
+                "Synonym perturbation applied (rate=0.15).",
+                "G dropped 0.72 → 0.49. Signal destroyed."
+            ],
+            metaChips: ["G: 0.72→0.49", "Drop: 32%", "Status: CLEAN"]
         }
     ];
+
+    let currentArtifactIdx = 0;
+    const artifactCarousel = document.getElementById("artifactCarousel");
+    const artifactIndicator = document.getElementById("artifactIndicator");
 
     const artifactTimers = new Map();
     const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -406,6 +347,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function stopArtifactAnimation(cardEl) {
+        if (!cardEl) return;
         const timer = artifactTimers.get(cardEl);
         if (timer) {
             clearInterval(timer);
@@ -414,34 +356,46 @@ document.addEventListener("DOMContentLoaded", () => {
         cardEl.classList.remove("artifact--playing");
     }
 
-    function renderArtifactGrid() {
-        const grid = document.getElementById("artifactGrid");
-        if (!grid) return;
+    function renderArtifactSlide(idx) {
+        if (!artifactCarousel) return;
 
-        grid.innerHTML = ARTIFACT_DEMOS.map((demo, i) => buildArtifactCard(demo, i)).join("");
+        const existing = artifactCarousel.querySelector(".method-artifact");
+        stopArtifactAnimation(existing);
 
-        if (prefersReducedMotion) {
-            grid.querySelectorAll(".method-artifact").forEach(card => {
-                setArtifactStep(card, ARTIFACT_DEMOS[parseInt(card.dataset.artifactIdx, 10)].outcomes.length - 1);
-            });
-            return;
+        artifactCarousel.innerHTML = buildArtifactCard(ARTIFACT_DEMOS[idx], idx);
+        if (artifactIndicator) {
+            artifactIndicator.textContent = `${idx + 1}/${ARTIFACT_DEMOS.length}`;
         }
 
-        const observer = new IntersectionObserver(
-            (entries) => {
-                entries.forEach(entry => {
-                    if (entry.isIntersecting) {
-                        startArtifactAnimation(entry.target);
-                    } else {
-                        stopArtifactAnimation(entry.target);
-                    }
-                });
-            },
-            { threshold: 0.35 }
-        );
+        const card = artifactCarousel.querySelector(".method-artifact");
+        if (!card) return;
 
-        grid.querySelectorAll(".method-artifact").forEach(card => observer.observe(card));
+        if (prefersReducedMotion) {
+            setArtifactStep(card, ARTIFACT_DEMOS[idx].outcomes.length - 1);
+        } else {
+            startArtifactAnimation(card);
+        }
     }
 
-    renderArtifactGrid();
+    function initArtifactCarousel() {
+        if (!artifactCarousel) return;
+
+        const prevArtifactBtn = document.getElementById("prevArtifactBtn");
+        const nextArtifactBtn = document.getElementById("nextArtifactBtn");
+
+        if (prevArtifactBtn && nextArtifactBtn) {
+            prevArtifactBtn.addEventListener("click", () => {
+                currentArtifactIdx = (currentArtifactIdx - 1 + ARTIFACT_DEMOS.length) % ARTIFACT_DEMOS.length;
+                renderArtifactSlide(currentArtifactIdx);
+            });
+            nextArtifactBtn.addEventListener("click", () => {
+                currentArtifactIdx = (currentArtifactIdx + 1) % ARTIFACT_DEMOS.length;
+                renderArtifactSlide(currentArtifactIdx);
+            });
+        }
+
+        renderArtifactSlide(0);
+    }
+
+    initArtifactCarousel();
 });

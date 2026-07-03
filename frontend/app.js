@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const diffViewContainer = document.getElementById("diffViewContainer");
     const diffHtmlOutput = document.getElementById("diffHtmlOutput");
     const attackMode = document.getElementById("attackMode");
-    const enableThinking = document.getElementById("enableThinking");
 
     const runBtn = document.getElementById("runBtn");
     const btnText = document.getElementById("btnText");
@@ -20,6 +19,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const verdictText = document.getElementById("verdictText");
     const autoRationaleBox = document.getElementById("autoRationaleBox");
     const autoRationaleText = document.getElementById("autoRationaleText");
+    const attackStatusBox = document.getElementById("attackStatusBox");
+    const attackUsedBadge = document.getElementById("attackUsedBadge");
+    const paraphraseSourceBadge = document.getElementById("paraphraseSourceBadge");
+    const rewriteWarningBox = document.getElementById("rewriteWarningBox");
+    const rewriteWarningText = document.getElementById("rewriteWarningText");
 
     const preGVal = document.getElementById("preGVal");
     const preBadge = document.getElementById("preBadge");
@@ -87,6 +91,8 @@ document.addEventListener("DOMContentLoaded", () => {
         verdictBanner.className = "neo-banner";
         verdictText.innerText = "Processing...";
         autoRationaleBox.classList.add("hidden");
+        if (attackStatusBox) attackStatusBox.classList.add("hidden");
+        if (rewriteWarningBox) rewriteWarningBox.classList.add("hidden");
 
         try {
             const response = await fetch("/remove-watermark", {
@@ -95,7 +101,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 body: JSON.stringify({
                     text: text,
                     attack_mode: attackMode.value,
-                    enable_thinking: enableThinking.checked,
                     substitution_rate: 0.15
                 })
             });
@@ -139,6 +144,55 @@ document.addEventListener("DOMContentLoaded", () => {
             autoRationaleText.innerText = data.auto_rationale;
         } else {
             autoRationaleBox.classList.add("hidden");
+        }
+
+        if (attackStatusBox && attackUsedBadge) {
+            attackStatusBox.classList.remove("hidden");
+            const mode = data.attack_used || "unknown";
+            if (mode === "none") {
+                attackUsedBadge.innerText = "Attack: none (input unchanged)";
+                attackUsedBadge.className = "neo-badge yellow";
+            } else {
+                attackUsedBadge.innerText = `Attack: ${mode}`;
+                attackUsedBadge.className = "neo-badge outline";
+            }
+        }
+
+        if (paraphraseSourceBadge) {
+            if (data.paraphrase_source) {
+                paraphraseSourceBadge.classList.remove("hidden");
+                const labels = {
+                    api: "Gemma 4 API",
+                    local: "Local Gemma 4",
+                    heuristic: "Heuristic fallback",
+                };
+                paraphraseSourceBadge.innerText = `Paraphrase: ${labels[data.paraphrase_source] || data.paraphrase_source}`;
+                paraphraseSourceBadge.className = data.paraphrase_source === "heuristic"
+                    ? "neo-badge yellow"
+                    : "neo-badge outline";
+            } else {
+                paraphraseSourceBadge.classList.add("hidden");
+            }
+        }
+
+        if (rewriteWarningBox && rewriteWarningText) {
+            let showWarning = false;
+            let warningMsg = "";
+            if (data.attack_used === "none" || data.output_unchanged) {
+                showWarning = true;
+                warningMsg = data.attack_used === "none"
+                    ? "No attack was applied — output matches sanitized input. Try Combined mode or paste AI text with lower perplexity."
+                    : "Output matches sanitized input after attack — text may look unchanged.";
+            } else if (data.paraphrase_source === "heuristic") {
+                showWarning = true;
+                warningMsg = "Paraphrase used heuristic fallback — Gemma 4 API output was empty or too short for this text length.";
+            }
+            if (showWarning) {
+                rewriteWarningBox.classList.remove("hidden");
+                rewriteWarningText.innerText = warningMsg;
+            } else {
+                rewriteWarningBox.classList.add("hidden");
+            }
         }
 
         preGVal.innerText = data.pre_attack.g_value.toFixed(2);

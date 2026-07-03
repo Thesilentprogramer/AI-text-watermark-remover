@@ -1,0 +1,92 @@
+{
+  "detection": [
+    {
+      "sample": "watermarked",
+      "g_value": 0.5086,
+      "is_watermarked": false,
+      "perplexity": 0.0,
+      "tokens": 155
+    },
+    {
+      "sample": "clean",
+      "g_value": 0.4935,
+      "is_watermarked": false,
+      "perplexity": 0.0,
+      "tokens": 106
+    },
+    {
+      "sample": "unicode_hidden",
+      "g_value": 0.4875,
+      "is_watermarked": false,
+      "perplexity": 0.0,
+      "tokens": 20
+    },
+    {
+      "sample": "gemini_style",
+      "g_value": 0.4938,
+      "is_watermarked": false,
+      "perplexity": 0.0,
+      "tokens": 52
+    },
+    {
+      "sample": "short_ai",
+      "g_value": 0.5175,
+      "is_watermarked": false,
+      "perplexity": 0.0,
+      "tokens": 25
+    }
+  ],
+  "attacks": {
+    "perturb": {
+      "samples": 5,
+      "avg_g_pre": 0.4971,
+      "avg_g_post": 0.4957,
+      "avg_drop_pct": 0.5,
+      "success_rate": 100.0
+    },
+    "homoglyph": {
+      "samples": 0,
+      "avg_g_pre": 0.0,
+      "avg_g_post": 0.0,
+      "avg_drop_pct": 0.0,
+      "success_rate": 0.0
+    },
+    "sanitize_perturb": {
+      "samples": 5,
+      "avg_g_pre": 0.4971,
+      "avg_g_post": 0.4936,
+      "avg_drop_pct": 0.73,
+      "success_rate": 100.0
+    },
+    "paraphrase": {
+      "samples": 5,
+      "avg_g_pre": 0.4971,
+      "avg_g_post": 0.4877,
+      "avg_drop_pct": 1.85,
+      "success_rate": 100.0
+    },
+    "backtranslate": {
+      "samples": 0,
+      "avg_g_pre": 0.0,
+      "avg_g_post": 0.0,
+      "avg_drop_pct": 0.0,
+      "success_rate": 0.0
+    },
+    "combined": {
+      "samples": 5,
+      "avg_g_pre": 0.4971,
+      "avg_g_post": 0.4839,
+      "avg_drop_pct": 2.63,
+      "success_rate": 100.0
+    },
+    "auto": {
+      "samples": 5,
+      "avg_g_pre": 0.4971,
+      "avg_g_post": 0.4971,
+      "avg_drop_pct": 0.0,
+      "success_rate": 100.0
+    }
+  },
+  "sample_count": 5,
+  "detect_only": false
+}

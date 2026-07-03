@@ -49,17 +49,20 @@ class AttackPipeline:
         step_logs: list,
         intermediate_steps: list,
         attack_mode: str,
-    ) -> str:
+    ) -> tuple:
         paraphraser = get_paraphrase_engine()
+        paraphrase_source = "skipped"
         step_num = 3
 
         for layer in layers:
             if layer == "paraphrase":
                 current_text = paraphraser.paraphrase(
                     text=current_text,
-                    enable_thinking=request.enable_thinking,
                 ).strip()
+                paraphrase_source = getattr(paraphraser, "last_paraphrase_source", "skipped")
                 desc = "Gemma 4 E2B paraphrased token sequence under fresh probability distributions."
+                if paraphrase_source == "heuristic":
+                    desc += " (heuristic fallback — set GOOGLE_API_KEY + GEMMA_API_MODEL for Gemma 4 API)"
                 step_logs.append(f"Step {step_num} (Paraphrase): {desc}")
 
             elif layer == "backtranslate":
@@ -87,7 +90,7 @@ class AttackPipeline:
             elif layer == "homoglyph":
                 current_text = self.homoglyph_engine.apply_homoglyphs(
                     current_text,
-                    rate=request.substitution_rate or 0.25,
+                    replacement_rate=request.substitution_rate or 0.25,
                 )
                 desc = "Replaced ASCII characters with Cyrillic homoglyphs."
                 step_logs.append(f"Step {step_num} (Homoglyph): {desc}")
@@ -112,7 +115,7 @@ class AttackPipeline:
         if not layers:
             step_logs.append(f"Step 3 (Attack): No attack layers applied for mode '{attack_mode}'.")
 
-        return current_text
+        return current_text, paraphrase_source
 
     def run(self, request: WatermarkRequest) -> WatermarkResponse:
         start_time = time.time()
@@ -192,7 +195,8 @@ class AttackPipeline:
             layers = MANUAL_LAYER_MAP.get(attack_mode, ["paraphrase"])
 
         current_text = sanitized_text
-        current_text = self._execute_layers(
+        paraphrase_source = "skipped"
+        current_text, paraphrase_source = self._execute_layers(
             layers=layers,
             current_text=current_text,
             request=request,
@@ -202,6 +206,10 @@ class AttackPipeline:
         )
 
         clean_text = current_text.strip()
+        if not clean_text:
+            clean_text = sanitized_text.strip()
+            step_logs.append("Step 4 (Safety): Attack output was empty; restored sanitized input.")
+        output_unchanged = clean_text == sanitized_text.strip()
 
         # Step 5 — DETECT (after)
         post_detect_dict = detector.detect(clean_text)
@@ -262,5 +270,7 @@ class AttackPipeline:
             attack_used=attack_mode,
             auto_selected=auto_selected,
             auto_rationale=auto_rationale,
+            paraphrase_source=paraphrase_source if paraphrase_source != "skipped" else None,
+            output_unchanged=output_unchanged,
             processing_time_ms=elapsed_ms,
         )

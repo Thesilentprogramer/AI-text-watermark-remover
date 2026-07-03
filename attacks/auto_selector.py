@@ -3,6 +3,7 @@ Confidence-Based Attack Selector
 Automatically selects the optimal adversarial attack based on input text characteristics.
 """
 
+import os
 from dataclasses import dataclass
 from typing import List
 
@@ -89,13 +90,37 @@ def select_attack(
                 estimated_time="10–20 seconds",
             )
         return AttackPlan(
-            attack_mode="backtranslate",
-            layers=["backtranslate"],
+            attack_mode="paraphrase",
+            layers=["paraphrase"],
             rationale=(
                 f"Low perplexity ({perplexity:.1f}) suggests AI-generated text with no SynthID signal "
-                f"(G={pre_g_value:.2f}). Back-translating short text ({token_count} tokens)."
+                f"(G={pre_g_value:.2f}). Paraphrasing short text ({token_count} tokens)."
             ),
-            estimated_time="5–10 seconds",
+            estimated_time="10–20 seconds",
+        )
+
+    if os.getenv("FORCE_ATTACK", "false").lower() == "true" and token_count >= 50:
+        mode = "paraphrase" if token_count >= 200 else "paraphrase"
+        return AttackPlan(
+            attack_mode=mode,
+            layers=["paraphrase"],
+            rationale=(
+                f"FORCE_ATTACK enabled — running paraphrase on {token_count} tokens "
+                f"(G={pre_g_value:.2f}, PPL={perplexity:.1f})."
+            ),
+            estimated_time="10–20 seconds",
+        )
+
+    # Perplexity unavailable but long text with borderline G (typical Gemini baseline ~0.50)
+    if perplexity == 0 and token_count >= 100 and 0.48 <= pre_g_value < 0.55:
+        return AttackPlan(
+            attack_mode="paraphrase",
+            layers=["paraphrase"],
+            rationale=(
+                f"Borderline G-value ({pre_g_value:.2f}) on long text ({token_count} tokens). "
+                "Perplexity unavailable — paraphrasing to reset token sequence."
+            ),
+            estimated_time="10–20 seconds",
         )
 
     return AttackPlan(

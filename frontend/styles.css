@@ -249,9 +249,9 @@ h1, h2, h3, h4 {
 .formula-container {
     background: #ffffff;
     border: 3px solid #000;
-    padding: 1rem;
+    padding: 1.25rem;
     box-shadow: 3px 3px 0 #000;
-    min-height: 70px;
+    min-height: auto;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -269,6 +269,9 @@ h1, h2, h3, h4 {
 .formula mjx-container {
     font-size: 115% !important;
     margin: 0.5em 0 !important;
+    max-width: 100%;
+    overflow-x: auto;
+    display: inline-block;
 }
 
 .math-desc {
@@ -309,6 +312,24 @@ h1, h2, h3, h4 {
     font-weight: 600;
     line-height: 1.4;
     color: #000;
+}
+
+.attack-status-box {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+}
+
+.rewrite-warning-box {
+    background: var(--neo-yellow);
+    border: 3px solid #000;
+    box-shadow: 3px 3px 0 #000;
+    padding: 0.6rem 0.9rem;
+    margin-bottom: 1rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    line-height: 1.4;
 }
 
 /* Diff Visualizer Neo */
@@ -440,14 +461,63 @@ h1, h2, h3, h4 {
     box-shadow: 3px 3px 0 #000;
 }
 
-.artifact-grid {
+/* ML portfolio story section */
+.ml-story-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 2rem;
+    gap: 1.25rem;
 }
 
-@media (max-width: 900px) {
-    .artifact-grid { grid-template-columns: 1fr; }
+@media (max-width: 768px) {
+    .ml-story-grid { grid-template-columns: 1fr; }
+}
+
+.ml-story-card {
+    padding: 1.25rem;
+    margin-bottom: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.ml-story-card--wide {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.ml-story-card--wide .neo-btn { margin-top: 0; }
+
+.ml-story-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 800;
+    font-size: 0.75rem;
+    color: #c45c00;
+    letter-spacing: 0.08em;
+}
+
+.ml-story-card h3 {
+    font-size: 1.1rem;
+    margin: 0;
+}
+
+.ml-story-card p {
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--text-muted);
+    margin: 0;
+}
+
+.artifact-carousel {
+    max-width: 100%;
+}
+
+.artifact-carousel .method-artifact {
+    margin-bottom: 0;
 }
 
 .method-artifact {
